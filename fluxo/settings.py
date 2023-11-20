@@ -21,6 +21,8 @@ class AppThemeColors:
     GREY = '#F2F2F2'
     WHITE = ft.colors.WHITE
     WHITE_SECONDARY = ft.colors.WHITE70
+    GREEN = ft.colors.GREEN
+    RED = ft.colors.RED
 
 # Fontes
 FONTS = {

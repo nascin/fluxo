@@ -23,9 +23,8 @@ class Home(ft.UserControl):
                         color=AppThemeColors.BLACK,
                         size=25
                     ), # Text
-                    width=800
+                    width=700
                 ), # Container
-                
             ], # controls
             scroll=ft.ScrollMode.AUTO,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
