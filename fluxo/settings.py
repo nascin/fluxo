@@ -23,6 +23,7 @@ class AppThemeColors:
     WHITE_SECONDARY = ft.colors.WHITE70
     GREEN = ft.colors.GREEN
     RED = ft.colors.RED
+    BLUE = ft.colors.BLUE
 
 # Fontes
 FONTS = {

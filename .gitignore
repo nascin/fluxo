@@ -162,3 +162,4 @@ cython_debug/
 # Fluxo
 _env/
 *.sqlite3
+_teste.py

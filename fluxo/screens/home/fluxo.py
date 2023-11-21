@@ -1,7 +1,11 @@
 import flet as ft
 import asyncio
+from datetime import timedelta
 from fluxo.settings import AppThemeColors
 from fluxo_core.database.fluxo import Fluxo as ModelFluxo
+from fluxo_core.database.task import Task as ModelTask
+from fluxo.uttils import convert_str_to_datetime
+from fluxo.screens.home.status_execution import StatusExecution
 
 
 class Fluxo(ft.UserControl):
@@ -58,6 +62,9 @@ class Fluxo(ft.UserControl):
                             controls=[
 
                             ], # controls
+                            width=220,
+                            height=50,
+                            scroll=ft.ScrollMode.AUTO
                         ), # Row
                     ), # Container
                     ft.Container(width=50),
@@ -73,6 +80,7 @@ class Fluxo(ft.UserControl):
                         padding=ft.padding.all(5)
                     ), # Container
                 ], # controls
+                #scroll=ft.ScrollMode.AUTO
             ), # Row
             bgcolor=AppThemeColors.GREY,
             border_radius=ft.border_radius.all(10),
@@ -105,15 +113,27 @@ class Fluxo(ft.UserControl):
         await self.update_async()
 
     async def _load_status_executions(self):
-        for _ in range(7):
-            self.row_executions.current.controls.append(
-                ft.Container(
-                    bgcolor=AppThemeColors.GREEN,
-                    height=23,
-                    width=23,
-                    border_radius=ft.border_radius.all(15)
-                ), # Container
-            )
+        tasks = ModelTask.get_all_by_fluxo_id(self.fluxo.id)
+
+        # Organize task list by date
+        sorted_tasks = sorted(tasks, key=lambda x: x.start_time, reverse=True)
+
+        for task in sorted_tasks:
+            self.row_executions.current.controls.append(StatusExecution(self.fluxo, task))
+                    
+        if len(tasks) < 7:
+            n = 7 - len(tasks)
+            for _ in range(n):
+                self.row_executions.current.controls.append(
+                    ft.Container(
+                        bgcolor=AppThemeColors.WHITE,
+                        height=23,
+                        width=23,
+                        border_radius=ft.border_radius.all(15),
+                        tooltip=''
+                    ), # Container
+                )
+
 
         await self.update_async()
 
