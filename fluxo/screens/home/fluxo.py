@@ -48,12 +48,12 @@ class Fluxo(ft.UserControl):
                                         size=10,
                                         width=200
                                     ), # Text
-                                    left=100,
+                                    left=150,
                                     top=0,
                                 ), # Container
                             ], # controls
                         ), # Stack
-                        width=250,
+                        width=290,
                         height=45,
                     ), # Container
                     ft.Container(
