@@ -1,6 +1,7 @@
 import flet as ft
 from fluxo.settings import FONTS, AppThemeColors, AppSettings
 from fluxo.screens.home.home import view_home
+from fluxo.screens.task.task import view_task
 
 
 class App:
@@ -20,6 +21,9 @@ class App:
 
             if t_route.match('/'):
                 self.page.views.append(view_home())
+
+            elif t_route.match('task/:id'):
+                self.page.views.append(view_task(t_route.id))
 
             await self.page.update_async()
 

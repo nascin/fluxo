@@ -20,8 +20,12 @@ class StatusExecution(ft.UserControl):
             ref=self.container_execution,
             height=23,
             width=23,
-            border_radius=ft.border_radius.all(15)
+            border_radius=ft.border_radius.all(15),
+            on_click=self.on_click_task,
         )
+    
+    async def on_click_task(self, e):
+        await self.page.go_async(f'task/{self.task.id}')
     
     async def _load_status_execution(self):
         data_start_time = convert_str_to_datetime(self.task.start_time)

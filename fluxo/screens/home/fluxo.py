@@ -64,7 +64,8 @@ class Fluxo(ft.UserControl):
                             ], # controls
                             width=220,
                             height=50,
-                            scroll=ft.ScrollMode.AUTO
+                            scroll=ft.ScrollMode.AUTO,
+                            auto_scroll=True
                         ), # Row
                     ), # Container
                     ft.Container(width=50),
@@ -116,7 +117,7 @@ class Fluxo(ft.UserControl):
         tasks = ModelTask.get_all_by_fluxo_id(self.fluxo.id)
 
         # Organize task list by date
-        sorted_tasks = sorted(tasks, key=lambda x: x.start_time, reverse=True)
+        sorted_tasks = sorted(tasks, key=lambda x: x.start_time, reverse=False)
 
         for task in sorted_tasks:
             self.row_executions.current.controls.append(StatusExecution(self.fluxo, task))
@@ -124,7 +125,8 @@ class Fluxo(ft.UserControl):
         if len(tasks) < 7:
             n = 7 - len(tasks)
             for _ in range(n):
-                self.row_executions.current.controls.append(
+                self.row_executions.current.controls.insert(
+                    0,
                     ft.Container(
                         bgcolor=AppThemeColors.WHITE,
                         height=23,
