@@ -2,6 +2,7 @@ import flet as ft
 import asyncio
 from fluxo.settings import AppThemeColors
 from fluxo.screens.home.fluxo import Fluxo
+from fluxo.screens.footer import Footer
 from fluxo_core.database.fluxo import Fluxo as ModelFluxo
 
 
@@ -57,6 +58,7 @@ def view_home():
                 expand=True,
                 padding=ft.padding.all(15)
             ),
+            Footer()
         ],
         padding=ft.padding.all(0),
         bgcolor=AppThemeColors.WHITE,

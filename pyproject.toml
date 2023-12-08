@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fluxo"
+version = "0.5.1"
+authors = [
+  { name="Mailson Náscin", email="mailson.nascin@gmail.com" },
+]
+description = "Simple data flow with execution in separate threads and easy scheduling configuration."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["fluxo", "data", "scheduler"]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Internationalization",
+]
+dependencies = [
+    "flet==0.15.0",
+    "fluxo-core==0.5.0"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/nascin/fluxo"
+"Source Code" = "https://github.com/nascin/fluxo"
+"Bug Tracker" = "https://github.com/nascin/fluxo/issues"

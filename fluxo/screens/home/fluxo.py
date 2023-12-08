@@ -116,15 +116,29 @@ class Fluxo(ft.UserControl):
     async def _load_status_executions(self):
         tasks = ModelTask.get_all_by_fluxo_id(self.fluxo.id)
 
-        # Organize task list by date
-        sorted_tasks = sorted(tasks, key=lambda x: x.start_time, reverse=False)
+        if tasks:
+            # Organize task list by date
+            sorted_tasks = sorted(tasks, key=lambda x: x.start_time, reverse=False)
 
-        for task in sorted_tasks:
-            self.row_executions.current.controls.append(StatusExecution(self.fluxo, task))
-                    
-        if len(tasks) < 7:
-            n = 7 - len(tasks)
-            for _ in range(n):
+            for task in sorted_tasks:
+                self.row_executions.current.controls.append(StatusExecution(self.fluxo, task))
+                        
+            if len(tasks) < 7:
+                n = 7 - len(tasks)
+                for _ in range(n):
+                    self.row_executions.current.controls.insert(
+                        0,
+                        ft.Container(
+                            bgcolor=AppThemeColors.WHITE,
+                            height=23,
+                            width=23,
+                            border_radius=ft.border_radius.all(15),
+                            tooltip=''
+                        ), # Container
+                    )
+
+        else:
+            for _ in range(7):
                 self.row_executions.current.controls.insert(
                     0,
                     ft.Container(

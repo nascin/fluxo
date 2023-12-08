@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from fluxo.settings import AppThemeColors
 from fluxo.uttils import convert_str_to_datetime
+from fluxo.screens.footer import Footer
 from fluxo_core.database.task import Task as ModelTask
 from fluxo_core.database.fluxo import Fluxo as ModelFluxo
 
@@ -30,6 +31,12 @@ class Task(ft.UserControl):
                         controls=[
                             ft.Row(
                                 controls=[
+                                    ft.IconButton(
+                                        icon=ft.icons.ARROW_BACK_ROUNDED,
+                                        on_click=self.iconbutton_go_back,
+                                        icon_color=AppThemeColors.BLACK,
+                                        icon_size=30
+                                    ),
                                     ft.Text(
                                         ref=self.text_name_fluxo,
                                         weight=ft.FontWeight.BOLD,
@@ -175,6 +182,11 @@ class Task(ft.UserControl):
 
         await self.update_async()
 
+    async def iconbutton_go_back(self, e):
+        self.page.views.pop()
+        top_view = self.page.views[-1]
+        await self.page.go_async(top_view.route)
+
     async def did_mount_async(self):
         self.task__load_attributes_task = asyncio.create_task(self._load_attributes_task())
 
@@ -192,6 +204,7 @@ def view_task(task_id: int):
                 expand=True,
                 padding=ft.padding.all(15)
             ),
+            Footer()
         ],
         padding=ft.padding.all(0),
         bgcolor=AppThemeColors.WHITE,
