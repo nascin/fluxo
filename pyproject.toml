@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluxo"
-version = "0.5.1"
+version = "0.7.1"
 authors = [
   { name="Mailson Náscin", email="mailson.nascin@gmail.com" },
 ]
@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "flet==0.15.0",
-    "fluxo-core==0.5.0"
+    "schedule==1.2.1"
 ]
 
 [project.urls]

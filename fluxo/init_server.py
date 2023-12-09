@@ -1,7 +1,7 @@
 import flet as ft
 from fluxo.settings import FONTS, AppThemeColors, AppSettings
-from fluxo.screens.home.home import view_home
-from fluxo.screens.task.task import view_task
+from fluxo.fluxo_server.screens.home.home import view_home
+from fluxo.fluxo_server.screens.task.task import view_task
 
 
 class App:

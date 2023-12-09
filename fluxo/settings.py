@@ -4,7 +4,7 @@ import os
 
 class AppSettings:
     '''Configurações da aplicação Fluxo'''
-    VERSION = 'v0.5.1'
+    VERSION = 'v0.7.1'
     PORT = 8080
     ASSETS_DIR = 'fluxo/assets'
 
@@ -24,6 +24,14 @@ class AppThemeColors:
     GREEN = ft.colors.GREEN
     RED = ft.colors.RED
     BLUE = ft.colors.BLUE
+
+class Db:
+    NAME = 'database_fluxo.sqlite3'
+    PATH = os.path.join(os.getcwd(), NAME)
+
+class PathFilesPython:
+    FOLDER = 'python_files'
+    PATH_FILES_PYTHON = os.path.join(os.getcwd(), FOLDER)
 
 # Fontes
 FONTS = {

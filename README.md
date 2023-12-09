@@ -1,5 +1,7 @@
 # Fluxo
 
+![Texto Alternativo da Imagem](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/icon-192.png?alt=media&token=ab503840-b47d-4555-8bf4-16347df27d55)
+
 ### Simple data flow with execution in separate threads and easy scheduling configuration.
 
 # Installation
@@ -27,8 +29,8 @@ Write the following code in the fluxo1.py file to create a basic flow with a tas
 #### python_files/fluxo1.py:
 
 ```
-from fluxo_core.fluxo import Fluxo
-from fluxo_core.task import Task
+from fluxo.fluxo_core.fluxo import Fluxo
+from fluxo.fluxo_core.task import Task
 
 fluxo = Fluxo(
     name='Fluxo 1',
@@ -43,7 +45,7 @@ async def my_func():
 ### 4 - Finally, start the program with the command below:
 
 ```
-python -m fluxo_core.init
+python -m fluxo.init_schedule
 ```
 
 ### 5 - In another terminal, run the command below to start the web server::
@@ -52,4 +54,8 @@ python -m fluxo_core.init
 python -m fluxo.init_server
 ```
 
-### 6 - Open browser http://127.0.0.1:8080/
+### 6 - Open browser:
+
+```
+http://127.0.0.1:8080
+```
