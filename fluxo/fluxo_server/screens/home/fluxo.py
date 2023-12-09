@@ -2,10 +2,10 @@ import flet as ft
 import asyncio
 from datetime import timedelta
 from fluxo.settings import AppThemeColors
-from fluxo_core.database.fluxo import Fluxo as ModelFluxo
-from fluxo_core.database.task import Task as ModelTask
+from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
+from fluxo.fluxo_core.database.task import Task as ModelTask
 from fluxo.uttils import convert_str_to_datetime
-from fluxo.screens.home.status_execution import StatusExecution
+from fluxo.fluxo_server.screens.home.status_execution import StatusExecution
 
 
 class Fluxo(ft.UserControl):

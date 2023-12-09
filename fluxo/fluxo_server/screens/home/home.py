@@ -1,9 +1,9 @@
 import flet as ft
 import asyncio
 from fluxo.settings import AppThemeColors
-from fluxo.screens.home.fluxo import Fluxo
-from fluxo.screens.footer import Footer
-from fluxo_core.database.fluxo import Fluxo as ModelFluxo
+from fluxo.fluxo_server.screens.home.fluxo import Fluxo
+from fluxo.fluxo_server.screens.footer import Footer
+from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
 
 
 class Home(ft.UserControl):
