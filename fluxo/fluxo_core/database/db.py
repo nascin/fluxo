@@ -46,7 +46,7 @@ def create_db(path_db: str):
         ''')
         print('++ TB_Fluxo table created successfully.')
     except Exception as err:
-        print(f'++ Error creating TB_Fluxo table: {err}')
+        raise Exception(f'++ Error creating TB_Fluxo table: {err}')
 
     # Create TB_Task table
     try:
@@ -64,7 +64,21 @@ def create_db(path_db: str):
         ''')
         print('++ TB_Task table created successfully.')
     except Exception as err:
-        print(f'++ Error creating TB_Task table: {err}')
+        raise Exception(f'++ Error creating TB_Task table: {err}')
+    
+    # Create TB_App table
+    try:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS TB_App (
+                id INTEGER PRIMARY KEY,
+                active BOOLEAN,
+                active_since DATE
+            )
+        ''')
+        print('++ TB_App table created successfully.')
+    except Exception as err:
+        raise Exception(f'++ Error creating TB_App table: {err}')
+    
     finally:
         # Committing the changes
         conn.commit()
