@@ -1,12 +1,13 @@
 import flet as ft
 import os
+from pathlib import Path
 
 
 class AppSettings:
     '''Configurações da aplicação Fluxo'''
-    VERSION = 'v0.7.1'
+    VERSION = 'v0.8.0'
     PORT = 8080
-    ASSETS_DIR = 'fluxo/assets'
+    ASSETS_DIR = Path('fluxo/assets').resolve()
 
 
 class AppThemeColors:
