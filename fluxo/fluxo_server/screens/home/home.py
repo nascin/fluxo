@@ -40,10 +40,16 @@ class Home(ft.UserControl):
                                 ),
                                 bgcolor=AppThemeColors.QUARTENARY
                             ),
-                            ft.Text(
-                                ref=self.text_status_schedule,
-                                text_align=ft.TextAlign.END
-                            ), # Text
+                            ft.Container(
+                                content=ft.Text(
+                                    ref=self.text_status_schedule,
+                                    text_align=ft.TextAlign.END,
+                                    size=12
+                                ), # Text
+                                bgcolor=AppThemeColors.GREY,
+                                border_radius=ft.border_radius.all(10),
+                                padding=ft.padding.only(left=5, top=3, right=5, bottom=3)
+                            ),
                         ]
                     ),
                     width=700

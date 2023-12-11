@@ -46,6 +46,12 @@ class FluxosExecutor:
             process.terminate()
 
     def _change_app_status_to_true(self):
+        '''
+        Changes the application status to True in the database.
+
+        If the application already exists, its status is updated to True.
+        Otherwise, a new application with active status set to True is created and saved.
+        '''
         app = ModelApp.get()
         if app:
             app.update(app.id, True)
@@ -54,6 +60,11 @@ class FluxosExecutor:
             app.save()
 
     def _change_app_status_to_false(self):
+        '''
+        Changes the application status to False in the database.
+
+        If the application exists, its status is updated to False.
+        '''
         app = ModelApp.get()
         app.update(app.id, False)
 
