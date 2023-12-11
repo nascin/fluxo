@@ -15,13 +15,19 @@ class StatusExecution(ft.UserControl):
 
     def build(self):
         self.container_execution = ft.Ref[ft.Container]()
-
-        return ft.Container(
-            ref=self.container_execution,
-            height=23,
-            width=23,
-            border_radius=ft.border_radius.all(15),
-            on_click=self.on_click_task,
+        self.tooltip_execution = ft.Ref[ft.Tooltip]()
+    
+        return ft.Tooltip(
+            ref=self.tooltip_execution,
+            message='Synchronize',
+            content=ft.Container(
+                ref=self.container_execution,
+                height=23,
+                width=23,
+                border_radius=ft.border_radius.all(15),
+                on_click=self.on_click_task,
+            ),
+            bgcolor=AppThemeColors.QUARTENARY
         )
     
     async def on_click_task(self, e):
@@ -33,29 +39,29 @@ class StatusExecution(ft.UserControl):
         
         if self.task.execution_date is None:
             self.container_execution.current.bgcolor = AppThemeColors.BLUE
-            self.container_execution.current.tooltip = self.task.execution_date
+            self.tooltip_execution.current.message = self.task.execution_date
 
         elif self.task.execution_date and self.task.error:
             self.container_execution.current.bgcolor = AppThemeColors.RED
-            self.container_execution.current.tooltip = self.task.execution_date
+            self.tooltip_execution.current.message = self.task.execution_date
 
         elif self.fluxo.interval.get('minutes'):
             diference = data_execution_date - data_start_time
             if diference <= timedelta(minutes=self.fluxo.interval.get('minutes')):
                 self.container_execution.current.bgcolor = AppThemeColors.GREEN
-                self.container_execution.current.tooltip = self.task.execution_date
+                self.tooltip_execution.current.message = self.task.execution_date
 
         elif self.fluxo.interval.get('hours'):
             diference = data_execution_date - data_start_time
             if diference <= timedelta(hours=self.fluxo.interval.get('hours')):
                 self.container_execution.current.bgcolor = AppThemeColors.GREEN
-                self.container_execution.current.tooltip = self.task.execution_date
+                self.tooltip_execution.current.message = self.task.execution_date
 
         elif self.fluxo.interval.get('days'):
             diference = data_execution_date - data_start_time
             if diference <= timedelta(days=self.fluxo.interval.get('days')):
                 self.container_execution.current.bgcolor = AppThemeColors.GREEN
-                self.container_execution.current.tooltip = self.task.execution_date
+                self.tooltip_execution.current.message = self.task.execution_date
 
         await self.update_async()
 

@@ -17,5 +17,5 @@ class Footer(ft.UserControl):
                 ],
                 alignment=ft.MainAxisAlignment.CENTER
             ),
-            padding=ft.padding.all(15)
+            padding=ft.padding.all(10)
         )
