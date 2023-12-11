@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from fluxo.settings import AppThemeColors
 from fluxo.uttils import convert_str_to_datetime
+from fluxo.fluxo_server.screens.app_bar import AppBar
 from fluxo.fluxo_server.screens.footer import Footer
 from fluxo.fluxo_core.database.task import Task as ModelTask
 from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
@@ -199,6 +200,7 @@ def view_task(task_id: int):
     return ft.View(
         route='task/:id',
         controls=[
+            AppBar(),
             ft.Container(
                 content=Task(task_id),
                 expand=True,

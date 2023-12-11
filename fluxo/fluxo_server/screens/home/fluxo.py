@@ -34,7 +34,7 @@ class Fluxo(ft.UserControl):
                                         ref=self.text_name,
                                         weight=ft.FontWeight.BOLD,
                                         color=AppThemeColors.BLACK,
-                                        size=14,
+                                        size=13,
                                         width=200
                                     ), # Text
                                     left=0,
@@ -75,7 +75,7 @@ class Fluxo(ft.UserControl):
                             ref=self.text_status,
                             weight=ft.FontWeight.BOLD,
                             color=AppThemeColors.WHITE,
-                            size=12,
+                            size=10,
                         ), # Text
                         border_radius=ft.border_radius.all(5),
                         padding=ft.padding.all(5)

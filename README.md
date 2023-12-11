@@ -1,6 +1,6 @@
 # Fluxo
 
-![Texto Alternativo da Imagem](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/icon-192.png?alt=media&token=ab503840-b47d-4555-8bf4-16347df27d55)
+![Logo Fluxo](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/icon-192.png?alt=media&token=ab503840-b47d-4555-8bf4-16347df27d55)
 
 ### Simple data flow with execution in separate threads and easy scheduling configuration.
 
@@ -32,14 +32,11 @@ Write the following code in the fluxo1.py file to create a basic flow with a tas
 from fluxo.fluxo_core.fluxo import Fluxo
 from fluxo.fluxo_core.task import Task
 
-fluxo = Fluxo(
-    name='Fluxo 1',
-    interval={'minutes': 1, 'at': ':10'})
+fluxo = Fluxo(name='Fluxo 1', interval={'minutes': 1, 'at': ':00'})
 
-
-@Task('Tarefa 1', fluxo=fluxo)
-async def my_func():
-    print('my_func being executed')
+@Task('Task 1', fluxo=fluxo)
+async def My_func1():
+    print('My_func1 executed!')
 ```
 
 ### 4 - Finally, start the program with the command below:
@@ -59,3 +56,5 @@ python -m fluxo.init_server
 ```
 http://127.0.0.1:8080
 ```
+
+![Logo Fluxo](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/Fluxo.png?alt=media&token=3b04eddb-0c42-43e2-b72f-89648eb65cf3)
