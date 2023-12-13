@@ -41,7 +41,8 @@ def create_db(path_db: str):
                 name TEXT,
                 date_of_creation DATE,
                 interval TEXT,
-                active BOOLEAN
+                active BOOLEAN,
+                list_names_tasks TEXT -- Storing the list as a JSON string
             )
         ''')
         print('++ TB_Fluxo table created successfully.')
@@ -65,6 +66,24 @@ def create_db(path_db: str):
         print('++ TB_Task table created successfully.')
     except Exception as err:
         raise Exception(f'++ Error creating TB_Task table: {err}')
+    
+    # Create TB_LogExecutionFluxo table
+    try:
+        conn.execute('''
+            CREATE TABLE TB_LogExecutionFluxo (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                date_of_creation DATETIME,
+                start_time DATETIME,
+                end_time DATETIME,
+                id_fluxo INTEGER,
+                ids_task TEXT,  -- Storing the list as a JSON string
+                ids_error_task TEXT  -- Storing the list as a JSON string
+            )
+        ''')
+        print('++ TB_LogExecutionFluxo table created successfully.')
+    except Exception as err:
+        raise Exception(f'++ Error creating TB_LogExecutionFluxo table: {err}')
     
     # Create TB_App table
     try:

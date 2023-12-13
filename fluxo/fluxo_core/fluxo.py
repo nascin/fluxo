@@ -13,7 +13,7 @@ class Fluxo:
         self,
         name: str,
         interval: dict = None,
-        active: bool = None
+        active: bool = True
     ):
         self.name = name
         self.interval = interval

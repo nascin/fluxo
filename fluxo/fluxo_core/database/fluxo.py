@@ -18,6 +18,7 @@ class Fluxo:
     - date_of_creation (datetime): The date and time when the 'Fluxo' was created.
     - interval (dict): The interval information for the 'Fluxo'. Ex `{'minutes':1, 'at':':10'}`
     - active (bool): A flag indicating whether the 'Fluxo' is active or not.
+    - list_names_tasks: (list): List of task names linked to the flow.
 
     Methods:
     - save(): Saves the current 'Fluxo' instance to the 'TB_Fluxo' table in the database.
@@ -34,25 +35,27 @@ class Fluxo:
     date_of_creation: datetime = None
     interval: dict = None
     active: bool = True
+    list_names_tasks: list = None
 
     def save(self):
         '''
         Saves the current 'Fluxo' instance to the 'TB_Fluxo' table in the database.
         '''
         date_of_creation = current_time_formatted()
-        interval = json.dumps(self.interval)
+        interval = json.dumps(self.interval) if self.interval else None
+        list_names_tasks = json.dumps(self.list_names_tasks) if self.list_names_tasks else None
 
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO TB_Fluxo (name, date_of_creation, interval, active)
-            VALUES (?, ?, ?, ?)
-        ''', (self.name, date_of_creation, interval, self.active))
+            INSERT INTO TB_Fluxo (name, date_of_creation, interval, active, list_names_tasks)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (self.name, date_of_creation, interval, self.active, list_names_tasks))
         conn.commit()
         conn.close()
 
     @staticmethod
-    def update(id, name, date_of_creation, interval, active):
+    def update(id, name, date_of_creation, interval, active, list_names_tasks):
         '''
         Updates the 'Fluxo' with the specified ID with the provided information
         in the 'TB_Fluxo' table.
@@ -63,16 +66,18 @@ class Fluxo:
         - date_of_creation (datetime): The new date and time of creation for the 'Fluxo'.
         - interval (dict): The new interval information for the 'Fluxo'.
         - active (bool): The new active status for the 'Fluxo'.
+        - list_names_tasks: (list): The new List of task names linked to the flow.
         '''
-        interval = json.dumps(interval)
+        interval = json.dumps(interval) if interval else None
+        list_names_tasks = json.dumps(list_names_tasks) if list_names_tasks else None
 
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
         cursor.execute('''
             UPDATE TB_Fluxo
-            SET name=?, date_of_creation=?, interval=?, active=?
+            SET name=?, date_of_creation=?, interval=?, active=?, list_names_tasks=?
             WHERE id=?
-        ''', (name, date_of_creation, interval, active, id))
+        ''', (name, date_of_creation, interval, active, list_names_tasks, id))
         conn.commit()
         conn.close()
 
@@ -89,7 +94,21 @@ class Fluxo:
         cursor.execute('SELECT * FROM TB_Fluxo')
         data = cursor.fetchall()
         conn.close()
-        return [Fluxo(*row) for row in data]
+
+        fluxos = []
+        for row in data:
+            fluxo = Fluxo(*row)
+            
+            # Converter strings JSON from interval and list_names_tasks to lists
+            fluxo.interval = json.loads(fluxo.interval) if fluxo.interval else None
+            fluxo.list_names_tasks = json.loads(fluxo.list_names_tasks) if fluxo.list_names_tasks else None
+
+            fluxos.append(fluxo)
+
+        if fluxos:
+            return fluxos
+        else:
+            return None
 
     @staticmethod
     def get_by_name(name):
@@ -107,12 +126,15 @@ class Fluxo:
         cursor.execute('SELECT * FROM TB_Fluxo WHERE name=?', (name,))
         data = cursor.fetchone()
         conn.close()
+        
         if data:
-            data_list = []
-            for value in data:
-                data_list.append(value)
-            data_list[3] = json.loads(data_list[3])
-            return Fluxo(*data_list)
+            fluxo = Fluxo(*data)
+
+            # Converter strings JSON from interval and list_names_tasks to lists
+            fluxo.interval = json.loads(fluxo.interval) if fluxo.interval else None
+            fluxo.list_names_tasks = json.loads(fluxo.list_names_tasks) if fluxo.list_names_tasks else None
+
+            return fluxo
         else:
             return None
         
@@ -132,12 +154,15 @@ class Fluxo:
         cursor.execute('SELECT * FROM TB_Fluxo WHERE id=?', (id,))
         data = cursor.fetchone()
         conn.close()
+
         if data:
-            data_list = []
-            for value in data:
-                data_list.append(value)
-            data_list[3] = json.loads(data_list[3])
-            return Fluxo(*data_list)
+            fluxo = Fluxo(*data)
+
+            # Converter strings JSON from interval and list_names_tasks to lists
+            fluxo.interval = json.loads(fluxo.interval) if fluxo.interval else None
+            fluxo.list_names_tasks = json.loads(fluxo.list_names_tasks) if fluxo.list_names_tasks else None
+
+            return fluxo
         else:
             return None
 
@@ -165,4 +190,5 @@ class Fluxo:
             date_of_creation:       {self.date_of_creation},
             interval:               {self.interval},
             active:                 {self.active},
+            list_names_tasks:       {self.list_names_tasks},
         '''
