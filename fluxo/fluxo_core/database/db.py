@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from fluxo.settings import Db
+from fluxo.fluxo_core.fluxos_executor import logging
 
 
 def _verify_if_db_exists(path_db: str = Db.PATH):
@@ -45,7 +46,7 @@ def create_db(path_db: str):
                 list_names_tasks TEXT -- Storing the list as a JSON string
             )
         ''')
-        print('++ TB_Fluxo table created successfully.')
+        logging.info('TB_Fluxo table created successfully')
     except Exception as err:
         raise Exception(f'++ Error creating TB_Fluxo table: {err}')
 
@@ -63,7 +64,7 @@ def create_db(path_db: str):
                 FOREIGN KEY (fluxo_id) REFERENCES TB_Fluxo(id) ON DELETE CASCADE
             )
         ''')
-        print('++ TB_Task table created successfully.')
+        logging.info('TB_Task table created successfully')
     except Exception as err:
         raise Exception(f'++ Error creating TB_Task table: {err}')
     
@@ -81,7 +82,7 @@ def create_db(path_db: str):
                 ids_error_task TEXT  -- Storing the list as a JSON string
             )
         ''')
-        print('++ TB_LogExecutionFluxo table created successfully.')
+        logging.info('TB_LogExecutionFluxo table created successfully')
     except Exception as err:
         raise Exception(f'++ Error creating TB_LogExecutionFluxo table: {err}')
     
@@ -94,7 +95,7 @@ def create_db(path_db: str):
                 active_since DATE
             )
         ''')
-        print('++ TB_App table created successfully.')
+        logging.info('TB_App table created successfully')
     except Exception as err:
         raise Exception(f'++ Error creating TB_App table: {err}')
     

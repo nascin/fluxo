@@ -1,14 +1,10 @@
-import os
 import traceback
-import asyncio
-import importlib
 from datetime import datetime
 from fluxo.fluxo_core.fluxo import Fluxo
 from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
 from fluxo.fluxo_core.database.task import Task as ModelTask
 from fluxo.fluxo_core.database.log_execution_fluxo import LogExecutionFluxo as ModelLogExecutionFluxo
 from fluxo.uttils import current_time_formatted, convert_str_to_datetime, convert_datetime_to_str
-from fluxo.fluxo_core.scheduler import TaskScheduler
 
 
 class Task:
@@ -151,62 +147,3 @@ class Task:
 
             log_fluxo.end_time = convert_datetime_to_str(max(list_end_time_tasks))
             log_fluxo.update(**log_fluxo.__dict__)
-
-
-def execute_tasks(path, file):
-    '''
-    Executes asynchronous tasks defined in a module.
-
-    Parameters:
-    - path (str): The path to the directory containing the module.
-    - file (str): The name of the module file (excluding the '.py' extension).
-    '''
-    try:
-        # Remove the '.py' extension to get the module name
-        name_module = file[:-3]
-
-        # Dynamically import the module
-        dir_base = os.path.basename(path)
-        module = importlib.import_module(f"{dir_base}.{name_module}")
-
-        coroutines = []
-
-        # Search for asynchronous functions in the module
-        for name_attribute in dir(module):
-            attribute = getattr(module, name_attribute)
-            if asyncio.iscoroutinefunction(attribute):
-                # Check if the function is decorated with @Task
-                if hasattr(attribute, 'task_info'):
-
-                    task_info = attribute.task_info
-                    fluxo_info = task_info.get('fluxo')
-                    fluxo_register_db = ModelFluxo.get_by_name(
-                        fluxo_info.name)
-
-                    if fluxo_register_db is None:  # Check if fluxo exists in the database
-                        fluxo = ModelFluxo(
-                            name=fluxo_info.name,
-                            interval=fluxo_info.interval,
-                            list_names_tasks=[task_info.get('name')])
-                        fluxo.save()
-
-                    else: # Update Fluxo in database
-                        fluxo_register_db.name = fluxo_info.name
-                        fluxo_register_db.interval = fluxo_info.interval
-                        fluxo_register_db.active = fluxo_info.active
-                        fluxo_register_db.list_names_tasks.append(task_info.get('name'))
-                        fluxo_register_db.update(
-                            **fluxo_register_db.__dict__)
-                            
-                    if ModelFluxo.get_by_name(fluxo_info.name).active: # Check if fluxo.active is True
-                        coroutines.append((attribute, fluxo_info))
-
-                else:
-                    raise Exception("The function is not decorated with @Task")
-
-        if coroutines:
-            task_scheduler = TaskScheduler(coroutines)
-            task_scheduler.run_scheduler()
-
-    except Exception as e:
-        raise Exception(f"Error executing task in module")
