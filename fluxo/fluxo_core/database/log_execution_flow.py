@@ -7,18 +7,18 @@ from fluxo.uttils import current_time_formatted
 
 
 @dataclass
-class LogExecutionFluxo:
+class ModelLogExecutionFlow:
     '''
-    Represents the log of fluxo execution, storing information about tasks, errors, and execution times.
+    Represents the log of flow execution, storing information about tasks, errors, and execution times.
 
     Attributes:
         id (int, optional): The unique identifier for the log entry.
-        name (str, optional): The name of the fluxo associated with the log entry.
+        name (str, optional): The name of the flow associated with the log entry.
         date_of_creation (datetime, optional): The date and time when the log entry was created.
-        start_time (datetime, optional): The start time of the fluxo execution.
+        start_time (datetime, optional): The start time of the flow execution.
         end_time (datetime, optional): The end time of the fluxo execution.
-        id_fluxo (int, optional): The identifier of the associated fluxo.
-        ids_task (list, optional): A list of task IDs involved in the fluxo.
+        id_flow (int, optional): The identifier of the associated flow.
+        ids_task (list, optional): A list of task IDs involved in the flow.
         ids_error_task (list, optional): A list of task IDs that encountered errors during execution.
 
     Methods:
@@ -28,19 +28,17 @@ class LogExecutionFluxo:
         get_all(cls): Retrieve all log entries from the database.
         get_by_name(cls, name): Retrieve a log entry by its associated fluxo name from the database.
         get_by_id(cls, id): Retrieve a log entry by its unique identifier from the database.
-        get_by_idfluxo_and_endtime_is_none(cls, id_fluxo): Retrieve a log entry for a specific fluxo
+        get_by_idflow_and_endtime_is_none(cls, id_flow): Retrieve a log entry for a specific fluxo
             where the end time is not set.
-        get_all_by_id_fluxo(cls, id_fluxo): Retrieve all log entries for a specific fluxo from the database.
+        get_all_by_id_flow(cls, id_flow): Retrieve all log entries for a specific flow from the database.
         delete(cls, id): Delete a log entry by its unique identifier from the database.
-
-        __repr__(self): Returns a string representation of the 'LogExecutionFluxo' instance.
     '''
     id: int = None
     name: str = None
     date_of_creation: datetime = None
     start_time: datetime = None
     end_time: datetime = None
-    id_fluxo: int = None
+    id_flow: int = None
     ids_task: list = None
     ids_error_task: list = None
 
@@ -52,56 +50,56 @@ class LogExecutionFluxo:
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO TB_LogExecutionFluxo (name, date_of_creation, start_time, end_time, id_fluxo, ids_task, ids_error_task)
+            INSERT INTO TB_LogExecutionFlow (name, date_of_creation, start_time, end_time, id_flow, ids_task, ids_error_task)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (self.name, date_of_creation, self.start_time, self.end_time, self.id_fluxo, ids_task, ids_error_task))
+        ''', (self.name, date_of_creation, self.start_time, self.end_time, self.id_flow, ids_task, ids_error_task))
         conn.commit()
 
         cursor.execute('SELECT last_insert_rowid()')
-        id_log_execution_fluxo = cursor.fetchone()[0]
+        id_log_execution_flow = cursor.fetchone()[0]
 
         conn.close()
 
-        return LogExecutionFluxo.get_by_id(id_log_execution_fluxo)
+        return ModelLogExecutionFlow.get_by_id(id_log_execution_flow)
 
     @staticmethod
-    def update(id, name, date_of_creation, start_time, end_time, id_fluxo, ids_task, ids_error_task):
+    def update(id, name, date_of_creation, start_time, end_time, id_flow, ids_task, ids_error_task):
         ids_task = json.dumps(ids_task) if ids_task else None
         ids_error_task = json.dumps(ids_error_task) if ids_error_task else None
 
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
         cursor.execute('''
-            UPDATE TB_LogExecutionFluxo
-            SET name=?, date_of_creation=?, start_time=?, end_time=?, id_fluxo=?, ids_task=?, ids_error_task=?
+            UPDATE TB_LogExecutionFlow
+            SET name=?, date_of_creation=?, start_time=?, end_time=?, id_flow=?, ids_task=?, ids_error_task=?
             WHERE id=?
-        ''', (name, date_of_creation, start_time, end_time, id_fluxo, ids_task, ids_error_task, id))
+        ''', (name, date_of_creation, start_time, end_time, id_flow, ids_task, ids_error_task, id))
         conn.commit()
 
         conn.close()
 
-        return LogExecutionFluxo.get_by_id(id)
+        return ModelLogExecutionFlow.get_by_id(id)
 
     @staticmethod
     def get_all():
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM TB_LogExecutionFluxo')
+        cursor.execute('SELECT * FROM TB_LogExecutionFlow')
         data = cursor.fetchall()
         conn.close()
 
-        log_fluxos = []
+        log_flows = []
         for row in data:
-            log_fluxo = LogExecutionFluxo(*row)
+            log_flow = ModelLogExecutionFlow(*row)
             
             # Converter strings JSON from ids_task and ids_error_task to lists
-            log_fluxo.ids_task = json.loads(log_fluxo.ids_task) if log_fluxo.ids_task else None
-            log_fluxo.ids_error_task = json.loads(log_fluxo.ids_error_task) if log_fluxo.ids_error_task else None
+            log_flow.ids_task = json.loads(log_flow.ids_task) if log_flow.ids_task else None
+            log_flow.ids_error_task = json.loads(log_flow.ids_error_task) if log_flow.ids_error_task else None
 
-            log_fluxos.append(log_fluxo)
+            log_flows.append(log_flow)
 
-        if log_fluxos:
-            return log_fluxos
+        if log_flows:
+            return log_flows
         else:
             return None
 
@@ -109,16 +107,18 @@ class LogExecutionFluxo:
     def get_by_name(name):
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM TB_LogExecutionFluxo WHERE name=?', (name,))
+        cursor.execute('SELECT * FROM TB_LogExecutionFlow WHERE name=?', (name,))
         data = cursor.fetchone()
         conn.close()
+
         if data:
-            data_list = []
-            for value in data:
-                data_list.append(value)
-            data_list[6] = json.loads(data_list[6]) # attribute ids_task
-            data_list[7] = json.loads(data_list[7]) # attribute ids_error_task
-            return LogExecutionFluxo(*data_list)
+            log_flow = ModelLogExecutionFlow(*data)
+
+            # Converter strings JSON from ids_task and ids_error_task to lists
+            log_flow.ids_task = json.loads(log_flow.ids_task) if log_flow.ids_task else None
+            log_flow.ids_error_task = json.loads(log_flow.ids_error_task) if log_flow.ids_error_task else None
+
+            return log_flow
         else:
             return None
 
@@ -126,60 +126,60 @@ class LogExecutionFluxo:
     def get_by_id(id):
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM TB_LogExecutionFluxo WHERE id=?', (id,))
+        cursor.execute('SELECT * FROM TB_LogExecutionFlow WHERE id=?', (id,))
         data = cursor.fetchone()
         conn.close()
 
         if data:
-            log_fluxo = LogExecutionFluxo(*data)
+            log_flow = ModelLogExecutionFlow(*data)
 
             # Converter strings JSON from ids_task and ids_error_task to lists
-            log_fluxo.ids_task = json.loads(log_fluxo.ids_task) if log_fluxo.ids_task else None
-            log_fluxo.ids_error_task = json.loads(log_fluxo.ids_error_task) if log_fluxo.ids_error_task else None
+            log_flow.ids_task = json.loads(log_flow.ids_task) if log_flow.ids_task else None
+            log_flow.ids_error_task = json.loads(log_flow.ids_error_task) if log_flow.ids_error_task else None
 
-            return log_fluxo
+            return log_flow
         else:
             return None
         
     @staticmethod
-    def get_by_idfluxo_and_endtime_is_none(id_fluxo):
+    def get_by_idflow_and_endtime_is_none(id_flow):
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM TB_LogExecutionFluxo WHERE id_fluxo=? AND end_time IS NULL', (id_fluxo,))
+        cursor.execute('SELECT * FROM TB_LogExecutionFlow WHERE id_flow=? AND end_time IS NULL', (id_flow,))
         data = cursor.fetchone()
         conn.close()
 
         if data:
-            log_fluxo = LogExecutionFluxo(*data)
+            log_flow = ModelLogExecutionFlow(*data)
 
             # Converter strings JSON from ids_task and ids_error_task to lists
-            log_fluxo.ids_task = json.loads(log_fluxo.ids_task) if log_fluxo.ids_task else None
-            log_fluxo.ids_error_task = json.loads(log_fluxo.ids_error_task) if log_fluxo.ids_error_task else None
+            log_flow.ids_task = json.loads(log_flow.ids_task) if log_flow.ids_task else None
+            log_flow.ids_error_task = json.loads(log_flow.ids_error_task) if log_flow.ids_error_task else None
 
-            return log_fluxo
+            return log_flow
         else:
             return None
 
     @staticmethod
-    def get_all_by_id_fluxo(id_fluxo):
+    def get_all_by_id_flow(id_flow):
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM TB_LogExecutionFluxo WHERE id_fluxo=?', (id_fluxo,))
+        cursor.execute('SELECT * FROM TB_LogExecutionFlow WHERE id_flow=?', (id_flow,))
         data = cursor.fetchall()
         conn.close()
 
-        log_fluxos = []
+        log_flows = []
         for row in data:
-            log_fluxo = LogExecutionFluxo(*row)
+            log_flow = ModelLogExecutionFlow(*row)
             
             # Converter strings JSON from ids_task and ids_error_task to lists
-            log_fluxo.ids_task = json.loads(log_fluxo.ids_task) if log_fluxo.ids_task else None
-            log_fluxo.ids_error_task = json.loads(log_fluxo.ids_error_task) if log_fluxo.ids_error_task else None
+            log_flow.ids_task = json.loads(log_flow.ids_task) if log_flow.ids_task else None
+            log_flow.ids_error_task = json.loads(log_flow.ids_error_task) if log_flow.ids_error_task else None
 
-            log_fluxos.append(log_fluxo)
+            log_flows.append(log_flow)
 
-        if log_fluxos:
-            return log_fluxos
+        if log_flows:
+            return log_flows
         else:
             return None
 
@@ -187,13 +187,13 @@ class LogExecutionFluxo:
     def delete(id):
         conn = sqlite3.connect(Db.PATH)
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM TB_LogExecutionFluxo WHERE id=?', (id,))
+        cursor.execute('DELETE FROM TB_LogExecutionFlow WHERE id=?', (id,))
         conn.commit()
         conn.close()
 
     def __repr__(self) -> str:
         '''
-        Returns a string representation of the 'LogExecutionFluxo' instance.
+        Returns a string representation of the 'LogExecutionFlow' instance.
         '''
         return f'''
             id:                     {self.id},

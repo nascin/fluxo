@@ -2,13 +2,13 @@ import flet as ft
 import asyncio
 from datetime import timedelta
 from fluxo.settings import AppThemeColors
-from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
-from fluxo.fluxo_core.database.task import Task as ModelTask
+from fluxo.fluxo_core.database.flow import ModelFlow
+from fluxo.fluxo_core.database.task import ModelTask
 from fluxo.uttils import convert_str_to_datetime
 
 
 class StatusExecution(ft.UserControl):
-    def __init__(self, fluxo: ModelFluxo, task: ModelTask):
+    def __init__(self, fluxo: ModelFlow, task: ModelTask):
         super().__init__()
         self.fluxo = fluxo
         self.task = task

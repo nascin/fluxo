@@ -1,9 +1,9 @@
-from fluxo.fluxo_core.fluxos_executor import FluxosExecutor
-from fluxo.fluxo_core.fluxos_executor import logging
+from fluxo.fluxo_core.flows_executor import FlowsExecutor
+from fluxo.fluxo_core.flows_executor import logging
 
 if __name__ == '__main__':
-    fluxos_executor = FluxosExecutor()
+    flows_executor = FlowsExecutor()
     try:
-        fluxos_executor.execute_fluxos()
+        flows_executor.execute_parallel_flows()
     except KeyboardInterrupt:
         logging.warning('Program interrupted by the user')

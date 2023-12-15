@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from fluxo.settings import Db
-from fluxo.fluxo_core.fluxos_executor import logging
+from fluxo.fluxo_core.flows_executor import logging
 
 
 def _verify_if_db_exists(path_db: str = Db.PATH):
@@ -11,10 +11,10 @@ def _verify_if_db_exists(path_db: str = Db.PATH):
 
     Parameters:
     - path_db (str): The path to the database file. Defaults to the path specified in the
-      `settings_db.PATH` variable.
+      `Db.PATH` variable.
 
     Returns:
-    None
+        None
     '''
     if not os.path.exists(path_db):
         create_db(path_db)
@@ -22,8 +22,8 @@ def _verify_if_db_exists(path_db: str = Db.PATH):
 
 def create_db(path_db: str):
     '''
-    Creates a SQLite database at the specified path with two tables: 'TB_Fluxo' and 'TB_Task'.
-    If the tables do not exist, it creates them along with their respective columns.
+    Creates a SQLite database at the specified path. If the tables do not exist, 
+    it creates them along with their respective columns.
 
     Parameters:
     - path_db (str): The path to the SQLite database file.
@@ -31,63 +31,55 @@ def create_db(path_db: str):
     Return:
     None
     '''
-    # Database connection
-    conn = sqlite3.connect(path_db)
-
-    # Create TB_Fluxo table
     try:
+        # Database connection
+        conn = sqlite3.connect(path_db)
+
+        # Create TB_Flow table
         conn.execute('''
-            CREATE TABLE IF NOT EXISTS TB_Fluxo (
+            CREATE TABLE IF NOT EXISTS TB_Flow (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 date_of_creation DATE,
                 interval TEXT,
                 active BOOLEAN,
-                list_names_tasks TEXT -- Storing the list as a JSON string
+                list_names_tasks TEXT, -- Storing the list as a JSON string
+                running BOOLEAN,
+                running_process TEXT -- Storing the list as a JSON string
             )
         ''')
-        logging.info('TB_Fluxo table created successfully')
-    except Exception as err:
-        raise Exception(f'++ Error creating TB_Fluxo table: {err}')
+        logging.info('TB_Flow table created successfully')
 
-    # Create TB_Task table
-    try:
+        # Create TB_Task table
         conn.execute('''
             CREATE TABLE IF NOT EXISTS TB_Task (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 execution_date DATE,
-                fluxo_id INTEGER,
+                flow_id INTEGER,
                 start_time DATE,
                 end_time DATE,
-                error TEXT,
-                FOREIGN KEY (fluxo_id) REFERENCES TB_Fluxo(id) ON DELETE CASCADE
+                error TEXT
             )
         ''')
         logging.info('TB_Task table created successfully')
-    except Exception as err:
-        raise Exception(f'++ Error creating TB_Task table: {err}')
-    
-    # Create TB_LogExecutionFluxo table
-    try:
+        
+        # Create TB_LogExecutionFlow table
         conn.execute('''
-            CREATE TABLE TB_LogExecutionFluxo (
+            CREATE TABLE TB_LogExecutionFlow (
                 id INTEGER PRIMARY KEY,
                 name TEXT,
                 date_of_creation DATETIME,
                 start_time DATETIME,
                 end_time DATETIME,
-                id_fluxo INTEGER,
+                id_flow INTEGER,
                 ids_task TEXT,  -- Storing the list as a JSON string
                 ids_error_task TEXT  -- Storing the list as a JSON string
             )
         ''')
-        logging.info('TB_LogExecutionFluxo table created successfully')
-    except Exception as err:
-        raise Exception(f'++ Error creating TB_LogExecutionFluxo table: {err}')
-    
-    # Create TB_App table
-    try:
+        logging.info('TB_LogExecutionFlow table created successfully')
+        
+        # Create TB_App table
         conn.execute('''
             CREATE TABLE IF NOT EXISTS TB_App (
                 id INTEGER PRIMARY KEY,
@@ -96,8 +88,22 @@ def create_db(path_db: str):
             )
         ''')
         logging.info('TB_App table created successfully')
+
+    
     except Exception as err:
-        raise Exception(f'++ Error creating TB_App table: {err}')
+        # Log the error
+        logging.error(f'Error during database creation: {err}')
+
+        # Close the connection if open
+        if 'conn' in locals() and conn is not None:
+            conn.close()
+
+        # Delete the file if it exists
+        if os.path.exists(path_db):
+            os.remove(path_db)
+
+        # Raise the exception to propagate the error
+        raise err
     
     finally:
         # Committing the changes

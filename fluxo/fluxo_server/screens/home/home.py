@@ -4,8 +4,8 @@ from fluxo.settings import AppThemeColors
 from fluxo.fluxo_server.screens.home.fluxo import Fluxo
 from fluxo.fluxo_server.screens.app_bar import AppBar
 from fluxo.fluxo_server.screens.footer import Footer
-from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
-from fluxo.fluxo_core.database.app import App as ModelApp
+from fluxo.fluxo_core.database.flow import ModelFlow
+from fluxo.fluxo_core.database.app import ModelApp
 
 
 class Home(ft.UserControl):
@@ -25,7 +25,7 @@ class Home(ft.UserControl):
                     content=ft.Row(
                         controls=[
                             ft.Text(
-                                value='Fluxos',
+                                value='Flows',
                                 weight=ft.FontWeight.BOLD,
                                 color=AppThemeColors.BLACK,
                                 size=25,
@@ -72,10 +72,10 @@ class Home(ft.UserControl):
     
     async def _load_fluxos(self):
         self.responsiverow_fluxos.current.controls.clear()
-        fluxos = ModelFluxo.get_all()
+        fluxos = ModelFlow.get_all()
         if fluxos:
             for fluxo in fluxos:
-                fluxo = ModelFluxo.get_by_name(fluxo.name)
+                fluxo = ModelFlow.get_by_name(fluxo.name)
                 #self.column_fluxos.current.controls.append(Fluxo(fluxo=fluxo))
                 self.responsiverow_fluxos.current.controls.append(Fluxo(fluxo=fluxo))
                 await self.update_async()
@@ -94,7 +94,6 @@ class Home(ft.UserControl):
     async def on_click_iconbutton_sync(self, e):
         await self.clean_async()
         await self.did_mount_async()
-
 
     async def did_mount_async(self):
         self.task_load_fluxos = asyncio.create_task(self._load_fluxos())

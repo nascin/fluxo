@@ -6,7 +6,7 @@ from fluxo.uttils import current_time_formatted
 
 
 @dataclass
-class App:
+class ModelApp:
     '''
     Represents an application status in database
 
@@ -49,7 +49,7 @@ class App:
 
         conn.close()
 
-        return App.get()
+        return ModelApp.get()
 
     @staticmethod
     def update(id: int, active: bool):
@@ -75,7 +75,7 @@ class App:
         conn.commit()
         conn.close()
 
-        return App.get()
+        return ModelApp.get()
 
     @staticmethod
     def get(id: int = 1):
@@ -94,14 +94,14 @@ class App:
         data = cursor.fetchone()
         conn.close()
         if data:
-            return App(*data)
+            return ModelApp(*data)
         else:
             return None
 
 
     def __repr__(self) -> str:
         '''
-        Returns a string representation of the 'App' instance.
+        Returns a string representation of the 'ModelApp' instance.
         '''
         return f'''
             id:                   {self.id},

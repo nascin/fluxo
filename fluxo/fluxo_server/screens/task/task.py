@@ -5,8 +5,8 @@ from fluxo.settings import AppThemeColors
 from fluxo.uttils import convert_str_to_datetime
 from fluxo.fluxo_server.screens.app_bar import AppBar
 from fluxo.fluxo_server.screens.footer import Footer
-from fluxo.fluxo_core.database.task import Task as ModelTask
-from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
+from fluxo.fluxo_core.database.task import ModelTask
+from fluxo.fluxo_core.database.flow import ModelFlow
 
 
 class Task(ft.UserControl):
@@ -123,7 +123,7 @@ class Task(ft.UserControl):
     
     async def _load_attributes_task(self):
         task = ModelTask.get_by_id(self.task_id)
-        fluxo = ModelFluxo.get_by_id(task.fluxo_id)
+        fluxo = ModelFlow.get_by_id(task.flow_id)
 
         self.text_name_fluxo.current.value = fluxo.name
         self.text_name_task.current.value = task.name
