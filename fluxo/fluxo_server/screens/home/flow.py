@@ -1,20 +1,19 @@
 import flet as ft
 import asyncio
-from datetime import timedelta
 from fluxo.settings import AppThemeColors
-from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
-from fluxo.fluxo_core.database.task import Task as ModelTask
-from fluxo.uttils import convert_str_to_datetime
+from fluxo.init_schedule import flows_executor
+from fluxo.fluxo_core.database.flow import ModelFlow
+from fluxo.fluxo_core.database.log_execution_flow import ModelLogExecutionFlow
 from fluxo.fluxo_server.screens.home.status_execution import StatusExecution
 
 
-class Fluxo(ft.UserControl):
-    def __init__(self, fluxo: ModelFluxo):
+class Flow(ft.UserControl):
+    def __init__(self, flow: ModelFlow):
         super().__init__()
-        self.fluxo = fluxo
+        self.flow = flow
 
     def build(self):
-        self.row_fluxo = ft.Ref[ft.Row]()
+        self.row_flow = ft.Ref[ft.Row]()
         self.text_name = ft.Ref[ft.Text]()
         self.text_interval = ft.Ref[ft.Text]()
 
@@ -24,7 +23,7 @@ class Fluxo(ft.UserControl):
 
         return ft.Container(
             content=ft.Row(
-                ref=self.row_fluxo,
+                ref=self.row_flow,
                 controls=[
                     ft.Container(
                         content=ft.Stack(
@@ -62,7 +61,7 @@ class Fluxo(ft.UserControl):
                             controls=[
 
                             ], # controls
-                            width=220,
+                            width=320,
                             height=50,
                             scroll=ft.ScrollMode.AUTO,
                             auto_scroll=True
@@ -85,17 +84,17 @@ class Fluxo(ft.UserControl):
             ), # Row
             bgcolor=AppThemeColors.GREY,
             border_radius=ft.border_radius.all(10),
-            width=700,
+            width=900,
             height=60,
             padding=ft.padding.only(left=15, top=0, right=15, bottom=0)
         ) # Container
     
-    async def _load_attributes_fluxo(self):
+    async def _load_attributes_flow(self):
         # Name
-        self.text_name.current.value = self.fluxo.name
+        self.text_name.current.value = self.flow.name
 
         # Interval
-        interval = self.fluxo.interval
+        interval = self.flow.interval
         if interval.get('minutes'):
             self.text_interval.current.value = f'every {interval.get("minutes")} min(s) at {interval.get("at")[1:]}s'
         elif interval.get('hours'):
@@ -104,27 +103,33 @@ class Fluxo(ft.UserControl):
             self.text_interval.current.value = f'every {interval.get("days")} day(s) at {interval.get("at")}'
 
         # Status
-        if self.fluxo.active:
+        if self.flow.running:
             self.text_status.current.value = 'Live'
             self.container_status.current.bgcolor = AppThemeColors.GREEN
         else:
             self.text_status.current.value = 'Off'
             self.container_status.current.bgcolor = AppThemeColors.RED
 
+        # iconbutton_start_stop_flow
+        if self.flow.running:
+            self.iconbutton_start_stop_flow.current.icon = ft.icons.STOP_ROUNDED
+        else:
+            self.iconbutton_start_stop_flow.current.icon = ft.icons.PLAY_ARROW_ROUNDED
+
         await self.update_async()
 
     async def _load_status_executions(self):
-        tasks = ModelTask.get_all_by_fluxo_id(self.fluxo.id)
+        log_flows = ModelLogExecutionFlow.get_all_by_id_flow(self.flow.id)
 
-        if tasks:
+        if log_flows:
             # Organize task list by date
-            sorted_tasks = sorted(tasks, key=lambda x: x.start_time, reverse=False)
+            sorted_log_flows = sorted(log_flows, key=lambda x: x.date_of_creation, reverse=False)
 
-            for task in sorted_tasks:
-                self.row_executions.current.controls.append(StatusExecution(self.fluxo, task))
+            for log_flow in sorted_log_flows:
+                self.row_executions.current.controls.append(StatusExecution(log_flow))
                         
-            if len(tasks) < 7:
-                n = 7 - len(tasks)
+            if len(log_flows) < 10:
+                n = 10 - len(log_flows)
                 for _ in range(n):
                     self.row_executions.current.controls.insert(
                         0,
@@ -136,9 +141,8 @@ class Fluxo(ft.UserControl):
                             tooltip=''
                         ), # Container
                     )
-
         else:
-            for _ in range(7):
+            for _ in range(10):
                 self.row_executions.current.controls.insert(
                     0,
                     ft.Container(
@@ -150,13 +154,12 @@ class Fluxo(ft.UserControl):
                     ), # Container
                 )
 
-
         await self.update_async()
 
     async def did_mount_async(self):
-        self.task_load_attributes_fluxo = asyncio.create_task(self._load_attributes_fluxo())
+        self.task_load_attributes_flow = asyncio.create_task(self._load_attributes_flow())
         self.task_load_status_executions = asyncio.create_task(self._load_status_executions())
 
     async def will_unmount_async(self):
-        self.task_load_attributes_fluxo.cancel()
+        self.task_load_attributes_flow.cancel()
         self.task_load_status_executions.cancel()

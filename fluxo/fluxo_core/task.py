@@ -1,82 +1,93 @@
-import os
 import traceback
-import asyncio
-import importlib
 from datetime import datetime
-from fluxo.fluxo_core.fluxo import Fluxo
-from fluxo.fluxo_core.database.fluxo import Fluxo as ModelFluxo
-from fluxo.fluxo_core.database.task import Task as ModelTask
-from fluxo.uttils import current_time_formatted
-from fluxo.fluxo_core.scheduler import TaskScheduler
+from fluxo.fluxo_core.flow import Flow
+from fluxo.fluxo_core.database.flow import ModelFlow
+from fluxo.fluxo_core.database.task import ModelTask
+from fluxo.fluxo_core.database.log_execution_flow import ModelLogExecutionFlow
+from fluxo.uttils import current_time_formatted, convert_str_to_datetime, convert_datetime_to_str
 
 
 class Task:
     '''
-    Represents a 'Task' object associated with a 'Fluxo' for executing asynchronous functions.
+    Represents a task in a workflow, enabling the execution of asynchronous functions
+    with logging and error handling.
 
-    Attributes:
-    - task_info (dict): A dictionary containing information about the task, including its name, associated 'Fluxo',
-      start time, and end time.
+    Parameters:
+        - name (str): The name of the task.
+        - flow (Flow): The associated flow to which the task belongs.
+        - start_time (datetime, optional): The start time of the task.
+        - end_time (datetime, optional): The end time of the task.
 
-    Methods:
-    - __init__(name: str, fluxo: Fluxo, start_time: datetime = None, end_time: datetime = None): Initializes a new 'Task' instance.
-    - __call__(func): Decorator method that wraps an asynchronous function, records task information in the database,
-      and handles execution details.
+    Example:
+        ```
+        from fluxo.fluxo_core.flow import Flow
+        from fluxo.fluxo_core.task import Task
+
+        flow = Flow(name='My Flow 1', interval={'minutes': 1, 'at': ':00'})
+
+        @Task('My Task 1', flow=flow)
+        async def My_func():
+            print('My_func executed!')
+        ```
+
     '''
     def __init__(
         self,
         name: str,
-        fluxo: Fluxo,
+        flow: Flow,
         start_time: datetime = None,
         end_time: datetime = None
     ):
-        '''
-        Initializes a new 'Task' instance.
-
-        Parameters:
-        - name (str): The name of the task.
-        - fluxo (Fluxo): The associated 'Fluxo' for the task.
-        - start_time (datetime): The start time of the task. Defaults to None.
-        - end_time (datetime): The end time of the task. Defaults to None.
-        '''
         self.task_info = {
             'name': name,
-            'fluxo': fluxo,
+            'flow': flow,
             'start_time': start_time,
             'end_time': end_time,
         }
 
     def __call__(self, func):
         '''
-        Decorator method that wraps an asynchronous function, records task information in the database,
-        and handles execution details.
+        Decorates an asynchronous function to enable logging and error handling.
 
         Parameters:
-        - func: The asynchronous function to be decorated.
+            - func: The asynchronous function to be decorated.
 
         Returns:
-        async function: The decorated asynchronous function.
+            - wrapper: The decorated asynchronous function.
+
+        The decorated function is executed with logging, error handling, and updates to the database
+        for tracking task execution.
         '''
         async def wrapper(*args, **kwargs):
-            # Retrieve the 'Fluxo' information from the database
-            fluxo_register_db = ModelFluxo.get_by_name(
-                self.task_info.get('fluxo').name)
+            # Retrieve the 'Flow' information from the database
+            flow_register_db = ModelFlow.get_by_name(
+                self.task_info.get('flow').name)
 
             # Create a new 'ModelTask' instance and save it to the database
             task = ModelTask(name=self.task_info.get(
-                'name'), fluxo_id=fluxo_register_db.id)
+                'name'), flow_id=flow_register_db.id)
             new_task = task.save()
+
+            # Params to update LogExecutionFlow
+            _params = {
+                'id_flow': flow_register_db.id,
+                'id_task': new_task.id
+            }
 
             try:
                 # Call the original function
                 new_task.start_time = current_time_formatted()
                 new_task.update(**new_task.__dict__)
+                self._newlog_execution_flow(**_params)
 
+                # Function executed
                 result = await func(*args, **kwargs)
 
                 new_task.end_time = current_time_formatted()
-                new_task.execution_date = current_time_formatted()
+                new_task.execution_date = new_task.end_time
+
                 new_task.update(**new_task.__dict__)
+                self._update_log_execution_flow(**_params)
 
                 return result
             except Exception as err:
@@ -84,64 +95,75 @@ class Task:
                 new_task.error = f'[Error in task: {new_task.name}]' + \
                     '\n' + error
                 new_task.end_time = current_time_formatted()
-                new_task.execution_date = current_time_formatted()
+                new_task.execution_date = new_task.end_time
+
                 new_task.update(**new_task.__dict__)
+                self._update_log_execution_flow(**_params)
 
         setattr(wrapper, 'task_info', self.task_info)
         return wrapper
+    
+    def _newlog_execution_flow(self, **kwargs):
+        '''
+        Create the log of flow execution with task information.
 
+        Parameters:
+            - kwargs: Additional keyword arguments.
 
-def execute_tasks(path, file):
-    '''
-    Executes asynchronous tasks defined in a module.
+        This method create the log of flow execution in the database.
+        '''
+        log_flow = ModelLogExecutionFlow.get_by_idflow_and_endtime_is_none(kwargs['id_flow'])
+        flow = ModelFlow.get_by_id(kwargs['id_flow'])
 
-    Parameters:
-    - path (str): The path to the directory containing the module.
-    - file (str): The name of the module file (excluding the '.py' extension).
-    '''
-    try:
-        # Remove the '.py' extension to get the module name
-        name_module = file[:-3]
+        # If LogExecutionFlow is not in the database, create a new instance and save it
+        if log_flow is None:
+            log_flow = ModelLogExecutionFlow(
+                name=flow.name,
+                id_flow=flow.id,
+                start_time=current_time_formatted()
+            )
+            log_flow = log_flow.save()
+    
+    def _update_log_execution_flow(self, **kwargs):
+        '''
+        Updates the log of flow execution with task information.
 
-        # Dynamically import the module
-        dir_base = os.path.basename(path)
-        module = importlib.import_module(f"{dir_base}.{name_module}")
+        Parameters:
+            - kwargs: Additional keyword arguments.
 
-        coroutines = []
+        This method updates the log of flow execution in the database
+        with information about the associated task.
+        '''
+        log_flow = ModelLogExecutionFlow.get_by_idflow_and_endtime_is_none(kwargs['id_flow'])
+        flow = ModelFlow.get_by_id(kwargs['id_flow'])
+        task = ModelTask.get_by_id(kwargs['id_task'])
 
-        # Search for asynchronous functions in the module
-        for name_attribute in dir(module):
-            attribute = getattr(module, name_attribute)
-            if asyncio.iscoroutinefunction(attribute):
-                # Check if the function is decorated with @Task
-                if hasattr(attribute, 'task_info'):
+        # When tasks by log_flow is None, update the log with the current task information
+        if log_flow.ids_task is None:
+            log_flow.ids_task = [task.id]
+            if log_flow.start_time is None:
+                log_flow.start_time = task.start_time
+            log_flow = log_flow.update(**log_flow.__dict__)
+        else:
+            # When the number of tasks in the log is less than the total tasks in the fluxo,
+            # update the log with the current task information
+            if len(log_flow.ids_task) < len(flow.list_names_tasks):
+                log_flow.ids_task.append(task.id)
+                log_flow = log_flow.update(**log_flow.__dict__)
 
-                    task_info = attribute.task_info
-                    fluxo_info = task_info.get('fluxo')
-                    fluxo_register_db = ModelFluxo.get_by_name(
-                        fluxo_info.name)
+        # When all tasks in the flow are completed, update the log with end time and handle errors
+        if len(log_flow.ids_task) == len(flow.list_names_tasks):
+            list_end_time_tasks = []
+            for id_task in log_flow.ids_task:
+                task = ModelTask.get_by_id(id_task)
+                list_end_time_tasks.append(convert_str_to_datetime(task.end_time))
 
-                    if fluxo_register_db is None:  # Check if fluxo exists in the database
-                        fluxo = ModelFluxo(
-                            name=fluxo_info.name,
-                            interval=fluxo_info.interval)
-                        fluxo.save()
-
+                # If a task has an error, update the error log in the flow log
+                if task.error:
+                    if log_flow.ids_error_task is None:
+                        log_flow.ids_error_task = [task.id]
                     else:
-                        if fluxo_register_db.interval != fluxo_info.interval:
-                            fluxo_register_db.interval = fluxo_info.interval
-                            fluxo_register_db.update(
-                                **fluxo_register_db.__dict__)
-                            
-                    if ModelFluxo.get_by_name(fluxo_info.name).active: # Check if fluxo.active is True
-                        coroutines.append((attribute, fluxo_info))
+                        log_flow.ids_error_task.append(task.id)
 
-                else:
-                    print("The function is not decorated with @Task")
-
-        if coroutines:
-            task_scheduler = TaskScheduler(coroutines)
-            task_scheduler.run_scheduler()
-
-    except Exception as e:
-        print(f"Error executing task in module {module}: {e}")
+            log_flow.end_time = convert_datetime_to_str(max(list_end_time_tasks))
+            log_flow.update(**log_flow.__dict__)

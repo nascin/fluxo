@@ -1,6 +1,7 @@
 import flet as ft
 from fluxo.settings import FONTS, AppThemeColors, AppSettings
 from fluxo.fluxo_server.screens.home.home import view_home
+from fluxo.fluxo_server.screens.flow_execution.flow_execution import view_flow_execution
 from fluxo.fluxo_server.screens.task.task import view_task
 
 
@@ -21,6 +22,9 @@ class App:
 
             if t_route.match('/'):
                 self.page.views.append(view_home())
+            
+            elif t_route.match('flow-execution/:id'):
+                self.page.views.append(view_flow_execution(t_route.id))
 
             elif t_route.match('task/:id'):
                 self.page.views.append(view_task(t_route.id))

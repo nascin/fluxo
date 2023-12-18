@@ -29,14 +29,14 @@ Write the following code in the fluxo1.py file to create a basic flow with a tas
 #### python_files/fluxo1.py:
 
 ```
-from fluxo.fluxo_core.fluxo import Fluxo
+from fluxo.fluxo_core.flow import Flow
 from fluxo.fluxo_core.task import Task
 
-fluxo = Fluxo(name='Fluxo 1', interval={'minutes': 1, 'at': ':00'})
+flow = Flow(name='My Flow 1', interval={'minutes': 1, 'at': ':00'})
 
-@Task('Task 1', fluxo=fluxo)
-async def My_func1():
-    print('My_func1 executed!')
+@Task('My Task 1', flow=flow)
+async def My_func():
+    print('My_func executed!')
 ```
 
 ### 4 - Finally, start the program with the command below:

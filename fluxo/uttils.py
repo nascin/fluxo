@@ -6,6 +6,12 @@ def convert_str_to_datetime(data_str: str):
         return None
     else:
         return datetime.strptime(data_str, "%Y/%m/%d %H:%M:%S")
+    
+def convert_datetime_to_str(dt_obj: datetime):
+    if dt_obj is None:
+        return None
+    else:
+        return dt_obj.strftime("%Y/%m/%d %H:%M:%S")
 
   
 def current_time_formatted():
