@@ -8,9 +8,12 @@ import logging
 import signal
 from typing import List, Optional
 from fluxo.settings import PathFilesPython, Db
+from fluxo.uttils import current_time_formatted
 from fluxo.fluxo_core.database.db import _verify_if_db_exists
 from fluxo.fluxo_core.database.app import ModelApp
 from fluxo.fluxo_core.database.flow import ModelFlow
+from fluxo.fluxo_core.database.task import ModelTask
+from fluxo.fluxo_core.database.log_execution_flow import ModelLogExecutionFlow
 
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s ===> %(message)s',
@@ -158,8 +161,6 @@ class FlowsExecutor:
                                     
                                     if flow.active: # Check if fluxo.active is True
                                         FlowsExecutor._coroutines.append((attribute, flow_info))
-                            else:
-                                raise Exception("The function is not decorated with @Task")
 
                     if FlowsExecutor._coroutines:
                         flow.running = True
@@ -216,8 +217,6 @@ class FlowsExecutor:
                                 
                         if flow.active: # Check if flow.active is True
                             FlowsExecutor._coroutines.append((attribute, flow_info))
-                    else:
-                        raise Exception("The function is not decorated with @Task")
 
             if FlowsExecutor._coroutines:
                 flow = ModelFlow.get_by_name(FlowsExecutor._coroutines[0][1].name)
@@ -257,9 +256,10 @@ class FlowsExecutor:
                     schedule.cancel_job(job)
                 condition = False
 
-                tasks, flow = zip(*FlowsExecutor._coroutines)
-                task_names = [task.task_info.get('name') for task in tasks]
+                _tasks, flow = zip(*FlowsExecutor._coroutines)
+
                 flow = flow[0]
+                FlowsExecutor._update_tasks_in_db_if_keyboardinterrupt(flow.name)
                 FlowsExecutor._stop_flow_execution(flow.name)
 
     def _cleanup_processes(self):
@@ -281,6 +281,18 @@ class FlowsExecutor:
             True or None
         '''
         return os.path.exists(Db.PATH)
+    
+    @staticmethod
+    def _update_tasks_in_db_if_keyboardinterrupt(flow_name):
+        flow = ModelFlow.get_by_name(flow_name)
+        tasks = ModelTask.get_all_by_fluxo_id(flow.id)
+
+        for task in tasks:
+            if task.end_time is None:
+                task.error = 'KeyboardInterrupt'
+                task.end_time = current_time_formatted()
+                task.execution_date = task.end_time
+                task.update(**task.__dict__)
 
     @staticmethod
     def _stop_flow_execution(flow_name: str):
@@ -297,14 +309,17 @@ class FlowsExecutor:
         Note: This method updates the running status and running_process information in the database.
         '''
         flow = ModelFlow.get_by_name(flow_name)
+        log_flow = ModelLogExecutionFlow.get_by_idflow_and_endtime_is_none(flow.id)
         if flow:
             if flow.running:
                 pid = flow.running_process.get('process_pid')
-                print(pid)
                 try:
                     flow.running_process = None
                     flow.running = False
                     flow.update(**flow.__dict__)
+                    if log_flow:
+                        log_flow.delete(log_flow.id)
+                        
                     logging.info(f'Canceled pending TASK {flow.list_names_tasks} in FLOW [{flow.name}]')
                     os.kill(pid, signal.SIGTERM)
                 except ProcessLookupError:
@@ -347,3 +362,6 @@ class FlowsExecutor:
         - task: The asynchronous task to be executed.
         '''
         asyncio.run(task())
+
+
+flows_executor = FlowsExecutor()

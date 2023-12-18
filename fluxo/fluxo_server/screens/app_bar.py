@@ -23,7 +23,7 @@ class AppBar(ft.UserControl):
                         color=AppThemeColors.BLACK,
                         size=25
                     ), # Text
-                ]
+                ],
             ),
-            padding=ft.padding.only(left=10, top=5, right=10, bottom=0)
+            padding=ft.padding.only(left=10, top=5, right=10, bottom=0),
         )

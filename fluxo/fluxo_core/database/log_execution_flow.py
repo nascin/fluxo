@@ -201,7 +201,7 @@ class ModelLogExecutionFlow:
             date_of_creation:       {self.date_of_creation},
             start_time:             {self.start_time},
             end_time:               {self.end_time},
-            id_fluxo:               {self.id_fluxo},
+            id_flow:                {self.id_flow},
             ids_task:               {self.ids_task},
             ids_error_task:         {self.ids_error_task},
         '''

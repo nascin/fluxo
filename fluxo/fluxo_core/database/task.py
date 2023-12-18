@@ -191,7 +191,7 @@ class ModelTask:
             id:                     {self.id},
             name:                   {self.name},
             execution_date:         {self.execution_date},
-            fluxo_id:               {self.fluxo_id},
+            flow_id:                {self.flow_id},
             start_time:             {self.start_time},
             end_time:               {self.end_time},
             error:                  {self.error},

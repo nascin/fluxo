@@ -78,6 +78,7 @@ class Task:
                 # Call the original function
                 new_task.start_time = current_time_formatted()
                 new_task.update(**new_task.__dict__)
+                self._newlog_execution_flow(**_params)
 
                 # Function executed
                 result = await func(*args, **kwargs)
@@ -102,6 +103,27 @@ class Task:
         setattr(wrapper, 'task_info', self.task_info)
         return wrapper
     
+    def _newlog_execution_flow(self, **kwargs):
+        '''
+        Create the log of flow execution with task information.
+
+        Parameters:
+            - kwargs: Additional keyword arguments.
+
+        This method create the log of flow execution in the database.
+        '''
+        log_flow = ModelLogExecutionFlow.get_by_idflow_and_endtime_is_none(kwargs['id_flow'])
+        flow = ModelFlow.get_by_id(kwargs['id_flow'])
+
+        # If LogExecutionFlow is not in the database, create a new instance and save it
+        if log_flow is None:
+            log_flow = ModelLogExecutionFlow(
+                name=flow.name,
+                id_flow=flow.id,
+                start_time=current_time_formatted()
+            )
+            log_flow = log_flow.save()
+    
     def _update_log_execution_flow(self, **kwargs):
         '''
         Updates the log of flow execution with task information.
@@ -115,14 +137,6 @@ class Task:
         log_flow = ModelLogExecutionFlow.get_by_idflow_and_endtime_is_none(kwargs['id_flow'])
         flow = ModelFlow.get_by_id(kwargs['id_flow'])
         task = ModelTask.get_by_id(kwargs['id_task'])
-
-        # If LogExecutionFlow is not in the database, create a new instance and save it
-        if log_flow is None:
-            log_flow = ModelLogExecutionFlow(
-                name=flow.name,
-                id_flow=flow.id
-            )
-            log_flow = log_flow.save()
 
         # When tasks by log_flow is None, update the log with the current task information
         if log_flow.ids_task is None:

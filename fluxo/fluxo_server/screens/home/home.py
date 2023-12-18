@@ -1,7 +1,7 @@
 import flet as ft
 import asyncio
 from fluxo.settings import AppThemeColors
-from fluxo.fluxo_server.screens.home.fluxo import Fluxo
+from fluxo.fluxo_server.screens.home.flow import Flow
 from fluxo.fluxo_server.screens.app_bar import AppBar
 from fluxo.fluxo_server.screens.footer import Footer
 from fluxo.fluxo_core.database.flow import ModelFlow
@@ -13,12 +13,12 @@ class Home(ft.UserControl):
         super().__init__()
 
     def build(self):
-        self.column_fluxos = ft.Ref[ft.Column]()
-        self.responsiverow_fluxos = ft.Ref[ft.ResponsiveRow]()
+        self.column_flows = ft.Ref[ft.Column]()
+        self.responsiverow_flows = ft.Ref[ft.ResponsiveRow]()
         self.text_status_schedule = ft.Ref[ft.Column]()
 
         return ft.Column(
-            ref=self.column_fluxos,
+            ref=self.column_flows,
             controls=[
                 ft.Container(height=0),
                 ft.Container(
@@ -52,32 +52,31 @@ class Home(ft.UserControl):
                             ),
                         ]
                     ),
-                    width=700
+                    width=900
                 ), # Container
                 ft.Container(
                     content=ft.ResponsiveRow(
-                        ref=self.responsiverow_fluxos,
+                        ref=self.responsiverow_flows,
                         controls=[
 
                         ], # controls
                         alignment=ft.MainAxisAlignment.CENTER
                     ), # ResponsiveRow
                     alignment=ft.alignment.center,
-                    width=700
+                    width=900
                 ), # Container
             ], # controls
             scroll=ft.ScrollMode.AUTO,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
         ) # Column
     
-    async def _load_fluxos(self):
-        self.responsiverow_fluxos.current.controls.clear()
-        fluxos = ModelFlow.get_all()
-        if fluxos:
-            for fluxo in fluxos:
-                fluxo = ModelFlow.get_by_name(fluxo.name)
-                #self.column_fluxos.current.controls.append(Fluxo(fluxo=fluxo))
-                self.responsiverow_fluxos.current.controls.append(Fluxo(fluxo=fluxo))
+    async def _load_flows(self):
+        self.responsiverow_flows.current.controls.clear()
+        flows = ModelFlow.get_all()
+        if flows:
+            for flow in flows:
+                flow = ModelFlow.get_by_name(flow.name)
+                self.responsiverow_flows.current.controls.append(Flow(flow=flow))
                 await self.update_async()
 
     async def _status_schedule(self):
@@ -96,11 +95,11 @@ class Home(ft.UserControl):
         await self.did_mount_async()
 
     async def did_mount_async(self):
-        self.task_load_fluxos = asyncio.create_task(self._load_fluxos())
+        self.task_load_flows = asyncio.create_task(self._load_flows())
         self.task_status_schedule = asyncio.create_task(self._status_schedule())
 
     async def will_unmount_async(self):
-        self.task_load_fluxos.cancel()
+        self.task_load_flows.cancel()
         self.task_status_schedule.cancel()
 
 
