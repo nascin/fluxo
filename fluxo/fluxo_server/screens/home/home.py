@@ -91,6 +91,15 @@ class Home(ft.UserControl):
         await self.update_async()
 
     async def on_click_iconbutton_sync(self, e):
+        flows = ModelFlow.get_all()
+        running = []
+        for flow in flows:
+            running.append(flow.running)
+        if not True in running:
+            app = ModelApp.get()
+            app.active = False
+            app.update(app.id, False)
+
         await self.clean_async()
         await self.did_mount_async()
 

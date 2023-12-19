@@ -1,7 +1,7 @@
 import flet as ft
 import asyncio
 from fluxo.settings import AppThemeColors
-from fluxo.init_schedule import flows_executor
+from fluxo.fluxo_core.flows_executor import FlowsExecutor
 from fluxo.fluxo_core.database.flow import ModelFlow
 from fluxo.fluxo_core.database.log_execution_flow import ModelLogExecutionFlow
 from fluxo.fluxo_server.screens.home.status_execution import StatusExecution
@@ -20,6 +20,7 @@ class Flow(ft.UserControl):
         self.container_status = ft.Ref[ft.Container]()
         self.row_executions = ft.Ref[ft.Row]()
         self.text_status = ft.Ref[ft.Text]()
+        self.switch_running = ft.Ref[ft.Switch]()
 
         return ft.Container(
             content=ft.Row(
@@ -68,17 +69,11 @@ class Flow(ft.UserControl):
                         ), # Row
                     ), # Container
                     ft.Container(width=50),
-                    ft.Container(
-                        ref=self.container_status,
-                        content=ft.Text(
-                            ref=self.text_status,
-                            weight=ft.FontWeight.BOLD,
-                            color=AppThemeColors.WHITE,
-                            size=10,
-                        ), # Text
-                        border_radius=ft.border_radius.all(5),
-                        padding=ft.padding.all(5)
-                    ), # Container
+                    ft.Switch(
+                        ref=self.switch_running,
+                        label_position=ft.LabelPosition.LEFT,
+                        on_change=self.on_change_switch_running
+                    )
                 ], # controls
                 #scroll=ft.ScrollMode.AUTO
             ), # Row
@@ -101,21 +96,14 @@ class Flow(ft.UserControl):
             self.text_interval.current.value = f'every {interval.get("hours")} hour(s) at {interval.get("at")[1:]}m'
         elif interval.get('days'):
             self.text_interval.current.value = f'every {interval.get("days")} day(s) at {interval.get("at")}'
-
-        # Status
+        
+        # switch_start_stop_flow
         if self.flow.running:
-            self.text_status.current.value = 'Live'
-            self.container_status.current.bgcolor = AppThemeColors.GREEN
+            self.switch_running.current.value = True
+            self.switch_running.current.label = 'ON'
         else:
-            self.text_status.current.value = 'Off'
-            self.container_status.current.bgcolor = AppThemeColors.RED
-
-        # iconbutton_start_stop_flow
-        if self.flow.running:
-            self.iconbutton_start_stop_flow.current.icon = ft.icons.STOP_ROUNDED
-        else:
-            self.iconbutton_start_stop_flow.current.icon = ft.icons.PLAY_ARROW_ROUNDED
-
+            self.switch_running.current.value = False
+            self.switch_running.current.label = 'OFF'
         await self.update_async()
 
     async def _load_status_executions(self):
@@ -153,7 +141,20 @@ class Flow(ft.UserControl):
                         tooltip=''
                     ), # Container
                 )
+        await self.update_async()
 
+    async def on_change_switch_running(self, e):
+        flows_executor = FlowsExecutor()
+        flow = ModelFlow.get_by_id(self.flow.id)
+
+        if flow.running:
+            flows_executor.stop_flow_execution([flow])
+            e.control.value = False
+            e.control.label = 'OFF'
+        else:
+            flows_executor.execute_parallel_flows([flow])
+            e.control.value = True
+            e.control.label = 'ON'
         await self.update_async()
 
     async def did_mount_async(self):

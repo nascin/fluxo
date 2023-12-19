@@ -57,4 +57,4 @@ python -m fluxo.init_server
 http://127.0.0.1:8080
 ```
 
-![Logo Fluxo](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/Fluxo.png?alt=media&token=3b04eddb-0c42-43e2-b72f-89648eb65cf3)
+![Logo Fluxo](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/Fluxo.png?alt=media&token=77dc5e43-82d1-4274-8d3b-621e19db701a)
