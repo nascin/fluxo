@@ -83,8 +83,8 @@ class FlowsExecutor:
                     self.processes.append(process)
                     process.start()
 
-        for process in self.processes:
-            process.join()
+        #for process in self.processes:
+        #    process.join()
 
     def stop_flow_execution(self, flows: List[ModelFlow]):
         '''
@@ -269,7 +269,7 @@ class FlowsExecutor:
         logging.info('Terminating all processes')
         try:
             for process in self.processes:
-                process.terminate()
+                process.join()
         except Exception as err:
             print(f'===> {err}')
 
@@ -362,6 +362,3 @@ class FlowsExecutor:
         - task: The asynchronous task to be executed.
         '''
         asyncio.run(task())
-
-
-flows_executor = FlowsExecutor()
