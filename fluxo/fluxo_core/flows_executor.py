@@ -85,6 +85,19 @@ class FlowsExecutor:
 
         #for process in self.processes:
         #    process.join()
+                    
+    def update_new_flow_in_python_files(self):
+        # Check if the database doesn't exist
+        if not self._db_exists():
+            # Verify and create the database if it doesn't exist
+            _verify_if_db_exists()
+            
+        for file in os.listdir(self.path):
+            if file.endswith(".py"):
+                process = multiprocessing.Process(
+                    target=FlowsExecutor._update_tasks_in_new_flow, args=(self.path, file))
+                self.processes.append(process)
+                process.start()
 
     def stop_flow_execution(self, flows: List[ModelFlow]):
         '''
@@ -108,7 +121,7 @@ class FlowsExecutor:
                         flow.running_process = None
                         flow.running = False
                         flow.update(**flow.__dict__)
-                        logging.info(f'Canceled pending TASK {flow.list_names_tasks} in FLOW [{flow.name}]')
+                        logging.info(f'Flow [{flow.name}] execution scheduling canceled')
                         os.kill(pid, signal.SIGTERM)
                     except ProcessLookupError:
                         raise Exception(f'The process with PID {pid} was not found')
@@ -153,6 +166,7 @@ class FlowsExecutor:
                                         running=False
                                     )
                                     flow = new_flow.save()
+                                    logging.info(f'New Flow [{new_flow.name}] update in database')
 
                                 if flow.name == flow_info.name:
                                     flow.interval = flow_info.interval
@@ -167,6 +181,7 @@ class FlowsExecutor:
                         # Sets the running process to the flow, storing the PID of the current process.
                         flow.running_process = {'process_pid': os.getpid()}
                         flow.update(**flow.__dict__)
+                        logging.info(f'Flow [{flow.name}] execution scheduling started')
                         FlowsExecutor._schedule_async_tasks()
 
                 except Exception as e:
@@ -208,26 +223,67 @@ class FlowsExecutor:
                                 running=False
                             )
                             flow = flow.save()
+                            logging.info(f'New Flow [{flow.name}] update in database')
                         else:
                             flow.name = flow_info.name # Update Flow in database
                             flow.interval = flow_info.interval
-                            flow.active = flow_info.active
                             flow.list_names_tasks.append(task_info.get('name'))
                             flow.update(**flow.__dict__)
-                                
-                        if flow.active: # Check if flow.active is True
-                            FlowsExecutor._coroutines.append((attribute, flow_info))
-
-            if FlowsExecutor._coroutines:
-                flow = ModelFlow.get_by_name(FlowsExecutor._coroutines[0][1].name)
-                flow.running = True
-                # Sets the running process to the flow, storing the PID of the current process.
-                flow.running_process = {'process_pid': os.getpid()}
-                flow.update(**flow.__dict__)
-                FlowsExecutor._schedule_async_tasks()
 
         except Exception as e:
             raise Exception(f"Error executing task in module")
+        
+    @staticmethod
+    def _update_tasks_in_new_flow(path, file):
+        '''
+        Update asynchronous tasks defined in a new module for a new flow.
+
+        Parameters:
+        - path (str): The path to the directory containing the module.
+        - file (str): The name of the module file (excluding the '.py' extension).
+        '''
+        try:
+            # Remove the '.py' extension to get the module name
+            name_module = file[:-3]
+
+            # Dynamically import the module
+            dir_base = os.path.basename(path)
+            module = importlib.import_module(f"{dir_base}.{name_module}")
+
+            _name_flow = None
+            _list_names_tasks: list = []
+            # Search for asynchronous functions in the module
+            for name_attribute in dir(module):
+                attribute = getattr(module, name_attribute)
+                if asyncio.iscoroutinefunction(attribute):
+                    # Check if the function is decorated with @Task
+                    if hasattr(attribute, 'task_info'):
+
+                        task_info = attribute.task_info
+                        flow_info = task_info.get('flow')
+                        flow = ModelFlow.get_by_name(flow_info.name)
+
+                        if flow is None:  # Check if fluxo exists in the database
+                            flow = ModelFlow(
+                                name=flow_info.name,
+                                interval=flow_info.interval,
+                                list_names_tasks=[task_info.get('name')],
+                                running=False
+                            )
+                            flow = flow.save()
+                            _name_flow = flow
+                            logging.info(f'New Flow [{flow.name}] update in database')
+                        else:
+                            if _name_flow:
+                                _list_names_tasks.append(task_info.get('name'))
+            if _name_flow:
+                if _list_names_tasks:
+                    for _tasks in _list_names_tasks:
+                        _name_flow.list_names_tasks.append(_tasks)
+                _name_flow.update(**_name_flow.__dict__)
+
+        except Exception as e:
+            raise Exception(f"Error update task in module.")
 
     @staticmethod
     def _schedule_async_tasks():
@@ -320,7 +376,7 @@ class FlowsExecutor:
                     if log_flow:
                         log_flow.delete(log_flow.id)
                         
-                    logging.info(f'Canceled pending TASK {flow.list_names_tasks} in FLOW [{flow.name}]')
+                    logging.info(f'Flow [{flow.name}] execution scheduling canceled')
                     os.kill(pid, signal.SIGTERM)
                 except ProcessLookupError:
                     raise Exception(f'The process with PID {pid} was not found')
