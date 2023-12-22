@@ -4,9 +4,9 @@ import os
 
 class AppSettings:
     '''Configurações da aplicação Fluxo'''
-    VERSION = 'v0.11.0'
+    VERSION = 'v0.12.0'
     PORT = 8080
-    ASSETS_DIR = 'fluxo/fluxo_server/assets'
+    ASSETS_DIR = 'fluxo_server/assets'
 
 class AppThemeColors:
     '''Cores do tema da aplicação Fluxo'''

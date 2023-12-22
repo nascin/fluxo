@@ -11,8 +11,8 @@ class Flow:
 
     Example:
         ```
-        from fluxo.fluxo_core.flow import Flow
-        from fluxo.fluxo_core.task import Task
+        from fluxo import Flow
+        from fluxo import Task
 
         flow = Flow(name='My Flow 1', interval={'minutes': 1, 'at': ':00'})
 

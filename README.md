@@ -26,11 +26,11 @@ Now, create a Python file named fluxo1.py within the python_files folder. This i
 
 Write the following code in the fluxo1.py file to create a basic flow with a task:
 
-#### python_files/fluxo1.py:
+#### python_files/flow1.py:
 
 ```
-from fluxo.fluxo_core.flow import Flow
-from fluxo.fluxo_core.task import Task
+from fluxo import Flow
+from fluxo import Task
 
 flow = Flow(name='My Flow 1', interval={'minutes': 1, 'at': ':00'})
 
