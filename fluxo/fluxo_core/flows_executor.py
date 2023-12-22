@@ -9,17 +9,12 @@ import signal
 from typing import List, Optional
 from fluxo.settings import PathFilesPython, Db
 from fluxo.uttils import current_time_formatted
+from fluxo.logging import logger
 from fluxo.fluxo_core.database.db import _verify_if_db_exists
 from fluxo.fluxo_core.database.app import ModelApp
 from fluxo.fluxo_core.database.flow import ModelFlow
 from fluxo.fluxo_core.database.task import ModelTask
 from fluxo.fluxo_core.database.log_execution_flow import ModelLogExecutionFlow
-
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s ===> %(message)s',
-    datefmt='%Y/%m/%d %H:%M:%S',
-    level=logging.INFO  
-)
 
 
 class FlowsExecutor:
@@ -121,7 +116,7 @@ class FlowsExecutor:
                         flow.running_process = None
                         flow.running = False
                         flow.update(**flow.__dict__)
-                        logging.info(f'Flow [{flow.name}] execution scheduling canceled')
+                        logger.info(f'Flow [{flow.name}] execution scheduling canceled')
                         os.kill(pid, signal.SIGTERM)
                     except ProcessLookupError:
                         raise Exception(f'The process with PID {pid} was not found')
@@ -166,7 +161,7 @@ class FlowsExecutor:
                                         running=False
                                     )
                                     flow = new_flow.save()
-                                    logging.info(f'New Flow [{new_flow.name}] update in database')
+                                    logger.info(f'New Flow [{new_flow.name}] update in database')
 
                                 if flow.name == flow_info.name:
                                     flow.interval = flow_info.interval
@@ -181,7 +176,7 @@ class FlowsExecutor:
                         # Sets the running process to the flow, storing the PID of the current process.
                         flow.running_process = {'process_pid': os.getpid()}
                         flow.update(**flow.__dict__)
-                        logging.info(f'Flow [{flow.name}] execution scheduling started')
+                        logger.info(f'Flow [{flow.name}] execution scheduling started')
                         FlowsExecutor._schedule_async_tasks()
 
                 except Exception as e:
@@ -223,7 +218,7 @@ class FlowsExecutor:
                                 running=False
                             )
                             flow = flow.save()
-                            logging.info(f'New Flow [{flow.name}] update in database')
+                            logger.info(f'New Flow [{flow.name}] update in database')
                         else:
                             flow.name = flow_info.name # Update Flow in database
                             flow.interval = flow_info.interval
@@ -272,7 +267,7 @@ class FlowsExecutor:
                             )
                             flow = flow.save()
                             _name_flow = flow
-                            logging.info(f'New Flow [{flow.name}] update in database')
+                            logger.info(f'New Flow [{flow.name}] update in database')
                         else:
                             if _name_flow:
                                 _list_names_tasks.append(task_info.get('name'))
@@ -322,7 +317,7 @@ class FlowsExecutor:
         '''
         Terminates all running processes.
         '''
-        logging.info('Terminating all processes')
+        logger.info('Terminating all processes')
         try:
             for process in self.processes:
                 process.join()
@@ -376,7 +371,7 @@ class FlowsExecutor:
                     if log_flow:
                         log_flow.delete(log_flow.id)
                         
-                    logging.info(f'Flow [{flow.name}] execution scheduling canceled')
+                    logger.info(f'Flow [{flow.name}] execution scheduling canceled')
                     os.kill(pid, signal.SIGTERM)
                 except ProcessLookupError:
                     raise Exception(f'The process with PID {pid} was not found')

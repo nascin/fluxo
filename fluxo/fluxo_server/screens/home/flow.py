@@ -3,6 +3,7 @@ import asyncio
 from fluxo.settings import AppThemeColors
 from fluxo.fluxo_core.flows_executor import FlowsExecutor
 from fluxo.fluxo_core.database.flow import ModelFlow
+from fluxo.fluxo_core.database.task import ModelTask
 from fluxo.fluxo_core.database.log_execution_flow import ModelLogExecutionFlow
 from fluxo.fluxo_server.screens.home.status_execution import StatusExecution
 
@@ -72,6 +73,11 @@ class Flow(ft.UserControl):
                         ref=self.switch_running,
                         label_position=ft.LabelPosition.LEFT,
                         on_change=self.on_change_switch_running
+                    ),
+                    ft.IconButton(
+                        icon=ft.icons.DELETE_ROUNDED,
+                        icon_color=AppThemeColors.BLACK_TERTIARY,
+                        on_click=self.on_click_iconbutton_delete_flow
                     )
                 ], # controls
                 #scroll=ft.ScrollMode.AUTO
@@ -154,6 +160,23 @@ class Flow(ft.UserControl):
             e.control.value = True
             e.control.label = 'ON'
         await self.update_async()
+
+    async def on_click_iconbutton_delete_flow(self, e):
+        e.control.disabled = True
+        await self.update_async()
+
+        ModelFlow.delete(self.flow.id)
+
+        list_log_flow = ModelLogExecutionFlow.get_all_by_id_flow(self.flow.id)
+        if list_log_flow:
+            for log_flow in list_log_flow:
+                ModelLogExecutionFlow.delete(log_flow.id)
+
+        list_task = ModelTask.get_all_by_fluxo_id(self.flow.id)
+        if list_task:
+            for task in list_task:
+                ModelTask.delete(task.id)
+
 
     async def did_mount_async(self):
         self.task_load_attributes_flow = asyncio.create_task(self._load_attributes_flow())

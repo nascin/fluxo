@@ -35,7 +35,11 @@ class Home(ft.UserControl):
                             ft.Tooltip(
                                 message='Update new Flow',
                                 content=ft.FloatingActionButton(
-                                    content=ft.Text('Update new Flow', weight=ft.FontWeight.BOLD),
+                                    content=ft.Text(
+                                        value='Update new Flow', 
+                                        weight=ft.FontWeight.BOLD,
+                                        color=AppThemeColors.WHITE
+                                    ),
                                     bgcolor=AppThemeColors.PRIMARY,
                                     width=140,
                                     height=27,
@@ -47,7 +51,8 @@ class Home(ft.UserControl):
                                 message='Synchronize',
                                 content=ft.FloatingActionButton(
                                     content=ft.Icon(
-                                        name=ft.icons.SYNC
+                                        name=ft.icons.SYNC,
+                                        color=AppThemeColors.WHITE
                                     ),
                                     bgcolor=AppThemeColors.PRIMARY,
                                     width=50,

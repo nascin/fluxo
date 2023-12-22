@@ -1,4 +1,5 @@
 import traceback
+from fluxo.logging import logger
 from datetime import datetime
 from fluxo.fluxo_core.flow import Flow
 from fluxo.fluxo_core.database.flow import ModelFlow
@@ -20,8 +21,8 @@ class Task:
 
     Example:
         ```
-        from fluxo.fluxo_core.flow import Flow
-        from fluxo.fluxo_core.task import Task
+        from fluxo import Flow
+        from fluxo import Task
 
         flow = Flow(name='My Flow 1', interval={'minutes': 1, 'at': ':00'})
 
@@ -89,6 +90,8 @@ class Task:
                 new_task.update(**new_task.__dict__)
                 self._update_log_execution_flow(**_params)
 
+                logger.info(f'Task [{new_task.name}] executed successfully')
+
                 return result
             except Exception as err:
                 error = traceback.format_exc()
@@ -99,6 +102,8 @@ class Task:
 
                 new_task.update(**new_task.__dict__)
                 self._update_log_execution_flow(**_params)
+
+                logger.info(f'Task [{new_task.name}] executed with error')
 
         setattr(wrapper, 'task_info', self.task_info)
         return wrapper
