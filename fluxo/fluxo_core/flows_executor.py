@@ -4,7 +4,6 @@ import multiprocessing
 import importlib
 import asyncio
 import schedule
-import logging
 import signal
 from typing import List, Optional
 from fluxo.settings import PathFilesPython, Db
@@ -78,8 +77,15 @@ class FlowsExecutor:
                     self.processes.append(process)
                     process.start()
 
-        #for process in self.processes:
-        #    process.join()
+    def execute_flow_now(self, flows: Optional[List[ModelFlow]] = None):
+        '''
+        Executes Flow right now.
+        '''
+        for flow in flows:
+            process = multiprocessing.Process(
+                target=FlowsExecutor._execute_async_tasks_now, args=(self.path, flow))
+            self.processes.append(process)
+            process.start()
                     
     def update_new_flow_in_python_files(self):
         # Check if the database doesn't exist
@@ -89,10 +95,7 @@ class FlowsExecutor:
             
         for file in os.listdir(self.path):
             if file.endswith(".py"):
-                process = multiprocessing.Process(
-                    target=FlowsExecutor._update_tasks_in_new_flow, args=(self.path, file))
-                self.processes.append(process)
-                process.start()
+                FlowsExecutor._update_tasks_in_new_flow(self.path, file)
 
     def stop_flow_execution(self, flows: List[ModelFlow]):
         '''
@@ -122,7 +125,7 @@ class FlowsExecutor:
                         raise Exception(f'The process with PID {pid} was not found')
                     except PermissionError:
                         raise Exception(f'You are not allowed to terminate the process with PID {pid}.')
-
+  
     @staticmethod
     def _execute_async_tasks_from_flow(path, flow: Optional[ModelFlow] = None):
         '''
@@ -178,6 +181,65 @@ class FlowsExecutor:
                         flow.update(**flow.__dict__)
                         logger.info(f'Flow [{flow.name}] execution scheduling started')
                         FlowsExecutor._schedule_async_tasks()
+
+                except Exception as e:
+                    raise Exception(f"Error executing task in module")
+                
+    @staticmethod
+    def _execute_async_tasks_now(path, flow: Optional[ModelFlow] = None):
+        '''
+        Executes asynchronous tasks defined in a module.
+
+        Parameters:
+            - path (str): The path to the directory containing the module.
+            - flow (str): Flow and its tasks to be executed.
+        '''
+        for file in os.listdir(path):
+            if file.endswith('.py'):
+                try:
+                    # Remove the '.py' extension to get the module name
+                    name_module = file[:-3]
+
+                    # Dynamically import the module
+                    dir_base = os.path.basename(path)
+                    module = importlib.import_module(f"{dir_base}.{name_module}")
+
+                    # Search for asynchronous functions in the module
+                    for name_attribute in dir(module):
+                        attribute = getattr(module, name_attribute)
+                        if asyncio.iscoroutinefunction(attribute):
+                            # Check if the function is decorated with @Task
+                            if hasattr(attribute, 'task_info'):
+
+                                task_info = attribute.task_info
+                                flow_info = task_info.get('flow')
+                                flow_register_db = ModelFlow.get_by_name(flow_info.name)
+
+                                if flow_register_db is None:  # Check if fluxo exists in the database
+                                    new_flow = ModelFlow(
+                                        name=flow_info.name,
+                                        interval=flow_info.interval,
+                                        list_names_tasks=[task_info.get('name')],
+                                        running=False
+                                    )
+                                    flow = new_flow.save()
+                                    logger.info(f'New Flow [{new_flow.name}] update in database')
+
+                                if flow.name == flow_info.name:
+                                    flow.interval = flow_info.interval
+                                    flow.active = flow_info.active
+                                    flow.update(**flow.__dict__)
+                                    
+                                    if flow.active: # Check if fluxo.active is True
+                                        FlowsExecutor._coroutines.append((attribute, flow_info))
+
+                    if FlowsExecutor._coroutines:
+                        flow.running = True
+                        # Sets the running process to the flow, storing the PID of the current process.
+                        flow.running_process = {'process_pid': os.getpid()}
+                        flow.update(**flow.__dict__)
+                        logger.info(f'Flow [{flow.name}] execution scheduling started')
+                        FlowsExecutor._schedule_async_tasks_now()
 
                 except Exception as e:
                     raise Exception(f"Error executing task in module")
@@ -312,6 +374,38 @@ class FlowsExecutor:
                 flow = flow[0]
                 FlowsExecutor._update_tasks_in_db_if_keyboardinterrupt(flow.name)
                 FlowsExecutor._stop_flow_execution(flow.name)
+
+    @staticmethod
+    def _schedule_async_tasks_now():
+        '''
+        Schedules the execution of asynchronous tasks right now.
+        '''
+        for task, flow_info in FlowsExecutor._coroutines:
+            if flow_info.interval.get('minutes'):
+                schedule.every(flow_info.interval.get('minutes')).minutes.at(
+                    flow_info.interval.get('at')).do(FlowsExecutor._run_asynchronous_task, task)
+            elif flow_info.interval.get('hours'):
+                schedule.every(flow_info.interval.get('hours')).hours.at(
+                    flow_info.interval.get('at')).do(FlowsExecutor._run_asynchronous_task, task)
+            elif flow_info.interval.get('days'):
+                schedule.every(flow_info.interval.get('days')).days.at(
+                    flow_info.interval.get('at')).do(FlowsExecutor._run_asynchronous_task, task)
+                
+        jobs_pending = [schedule.get_jobs()]
+
+        _tasks, flow = zip(*FlowsExecutor._coroutines)
+        flow = flow[0]
+
+        try:
+            schedule.run_all()
+            schedule.clear()
+            FlowsExecutor._stop_flow_execution(flow.name)
+        except KeyboardInterrupt:
+            for job in jobs_pending:
+                schedule.cancel_job(job)
+
+            FlowsExecutor._update_tasks_in_db_if_keyboardinterrupt(flow.name)
+            FlowsExecutor._stop_flow_execution(flow.name)
 
     def _cleanup_processes(self):
         '''

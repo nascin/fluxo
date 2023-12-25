@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from fluxo.settings import Db
-from fluxo.fluxo_core.flows_executor import logging
+from fluxo.logging import logger
 
 
 def _verify_if_db_exists(path_db: str = Db.PATH):
@@ -48,7 +48,7 @@ def create_db(path_db: str):
                 running_process TEXT -- Storing the list as a JSON string
             )
         ''')
-        logging.info('TB_Flow table created successfully')
+        logger.info('TB_Flow table created successfully')
 
         # Create TB_Task table
         conn.execute('''
@@ -62,7 +62,7 @@ def create_db(path_db: str):
                 error TEXT
             )
         ''')
-        logging.info('TB_Task table created successfully')
+        logger.info('TB_Task table created successfully')
         
         # Create TB_LogExecutionFlow table
         conn.execute('''
@@ -77,7 +77,7 @@ def create_db(path_db: str):
                 ids_error_task TEXT  -- Storing the list as a JSON string
             )
         ''')
-        logging.info('TB_LogExecutionFlow table created successfully')
+        logger.info('TB_LogExecutionFlow table created successfully')
         
         # Create TB_App table
         conn.execute('''
@@ -87,12 +87,12 @@ def create_db(path_db: str):
                 active_since DATE
             )
         ''')
-        logging.info('TB_App table created successfully')
+        logger.info('TB_App table created successfully')
 
     
     except Exception as err:
         # Log the error
-        logging.error(f'Error during database creation: {err}')
+        logger.error(f'Error during database creation: {err}')
 
         # Close the connection if open
         if 'conn' in locals() and conn is not None:
