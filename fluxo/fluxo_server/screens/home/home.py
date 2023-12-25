@@ -92,7 +92,9 @@ class Home(ft.UserControl):
 
     async def on_click_floatingactionbutton_update_new_flow(self, e):
         self.flows_executor.update_new_flow_in_python_files()
-        await self.update_async()
+
+        await self.clean_async()
+        await self._load_flows()
 
     async def on_click_floatingactionbutton_sync(self, e):
         await self.clean_async()

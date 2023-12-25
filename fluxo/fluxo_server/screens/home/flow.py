@@ -22,6 +22,9 @@ class Flow(ft.UserControl):
         self.row_executions = ft.Ref[ft.Row]()
         self.switch_running = ft.Ref[ft.Switch]()
 
+        self.iconbutton_delete = ft.Ref[ft.IconButton]()
+        self.iconbutton_run_now = ft.Ref[ft.IconButton]()
+
         return ft.Container(
             content=ft.Row(
                 ref=self.row_flow,
@@ -69,15 +72,34 @@ class Flow(ft.UserControl):
                         ), # Row
                     ), # Container
                     ft.Container(width=50),
-                    ft.Switch(
-                        ref=self.switch_running,
-                        label_position=ft.LabelPosition.LEFT,
-                        on_change=self.on_change_switch_running
+                    ft.Tooltip(
+                        message='Schedule Execution',
+                        content=ft.Switch(
+                            ref=self.switch_running,
+                            label_position=ft.LabelPosition.LEFT,
+                            on_change=self.on_change_switch_running
+                        ),
+                        bgcolor=AppThemeColors.QUARTENARY
                     ),
-                    ft.IconButton(
-                        icon=ft.icons.DELETE_ROUNDED,
-                        icon_color=AppThemeColors.BLACK_TERTIARY,
-                        on_click=self.on_click_iconbutton_delete_flow
+                    ft.Tooltip(
+                        message='Run Now',
+                        content=ft.IconButton(
+                            ref=self.iconbutton_run_now,
+                            icon=ft.icons.PLAY_ARROW_ROUNDED,
+                            icon_color=AppThemeColors.BLACK_TERTIARY,
+                            on_click=self.on_click_iconbutton_run_now
+                        ),
+                        bgcolor=AppThemeColors.QUARTENARY
+                    ),
+                    ft.Tooltip(
+                        message='Delete Flow',
+                        content=ft.IconButton(
+                            ref=self.iconbutton_delete,
+                            icon=ft.icons.DELETE_ROUNDED,
+                            icon_color=AppThemeColors.BLACK_TERTIARY,
+                            on_click=self.on_click_iconbutton_delete_flow
+                        ),
+                        bgcolor=AppThemeColors.QUARTENARY
                     )
                 ], # controls
                 #scroll=ft.ScrollMode.AUTO
@@ -106,9 +128,17 @@ class Flow(ft.UserControl):
         if self.flow.running:
             self.switch_running.current.value = True
             self.switch_running.current.label = 'ON'
+
+            self.iconbutton_run_now.current.disabled = True
+            self.iconbutton_run_now.current.icon = ft.icons.STOP_ROUNDED
+            self.iconbutton_delete.current.disabled = True
         else:
             self.switch_running.current.value = False
             self.switch_running.current.label = 'OFF'
+
+            self.iconbutton_run_now.current.disabled = False
+            self.iconbutton_run_now.current.icon = ft.icons.PLAY_ARROW_ROUNDED
+            self.iconbutton_delete.current.disabled = False
         await self.update_async()
 
     async def _load_status_executions(self):
@@ -155,10 +185,28 @@ class Flow(ft.UserControl):
             self.flows_executor.stop_flow_execution([flow])
             e.control.value = False
             e.control.label = 'OFF'
+
+            self.iconbutton_run_now.current.disabled = False
+            self.iconbutton_run_now.current.icon = ft.icons.PLAY_ARROW_ROUNDED
+            self.iconbutton_delete.current.disabled = False
+
         else: # Start Flow
             self.flows_executor.execute_parallel_flows([flow])
             e.control.value = True
             e.control.label = 'ON'
+
+            self.iconbutton_run_now.current.disabled = True
+            self.iconbutton_run_now.current.icon = ft.icons.STOP_ROUNDED
+            self.iconbutton_delete.current.disabled = True
+        await self.update_async()
+
+    async def on_click_iconbutton_run_now(self, e):
+        self.flows_executor.execute_flow_now([self.flow])
+
+        e.control.disabled = True
+        e.control.icon = ft.icons.STOP_ROUNDED
+        self.iconbutton_delete.current.disabled = True  
+        
         await self.update_async()
 
     async def on_click_iconbutton_delete_flow(self, e):
@@ -176,7 +224,7 @@ class Flow(ft.UserControl):
         if list_task:
             for task in list_task:
                 ModelTask.delete(task.id)
-
+        await self.clean_async()
 
     async def did_mount_async(self):
         self.task_load_attributes_flow = asyncio.create_task(self._load_attributes_flow())
