@@ -21,7 +21,7 @@ classifiers = [
     "Topic :: Software Development :: Internationalization",
 ]
 dependencies = [
-    "flet==0.15.0",
+    "flet==0.17.0",
     "schedule==1.2.1"
 ]
 
