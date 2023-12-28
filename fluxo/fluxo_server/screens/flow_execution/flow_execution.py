@@ -101,6 +101,8 @@ class FlowExecution(ft.UserControl):
             )
             await self.update_async()
 
+        self.page.session.set('log_flow_id', self.log_flow_id)
+
     async def did_mount_async(self):
         self.task_load_log_flow = asyncio.create_task(self._load_log_flow())
 

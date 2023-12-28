@@ -3,6 +3,9 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
+name = "fluxo"
+version = "0.14.0"
+
 authors = [
   { name="Mailson Náscin", email="mailson.nascin@gmail.com" },
 ]

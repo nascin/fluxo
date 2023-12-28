@@ -172,15 +172,8 @@ class Task(ft.UserControl):
         await self.update_async()
 
     async def iconbutton_go_back(self, e):
-        list_log_flow = ModelLogExecutionFlow.get_all()
-        for log_flow in list_log_flow:
-            if log_flow.ids_task:
-                if int(self.task_id) in log_flow.ids_task:
-                    await self.page.go_async(f'flow-execution/{log_flow.id}')
-            else:
-                task = ModelTask.get_by_id(int(self.task_id))
-                log_flow_endtime_is_none = ModelLogExecutionFlow.get_by_idflow_and_endtime_is_none(task.flow_id)
-                await self.page.go_async(f'flow-execution/{log_flow_endtime_is_none.id}')
+        log_flow_id = self.page.session.get('log_flow_id')
+        await self.page.go_async(f'flow-execution/{log_flow_id}')
 
     async def did_mount_async(self):
         self.task_load_attributes_task = asyncio.create_task(self._load_attributes_task())
