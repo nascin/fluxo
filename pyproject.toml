@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluxo"
-version = "0.13.4"
+version = "0.14.0"
+
 authors = [
   { name="Mailson Náscin", email="mailson.nascin@gmail.com" },
 ]
-description = "Simple data flow with execution in separate threads and easy scheduling configuration."
 readme = "README.md"
 requires-python = ">=3.11"
 keywords = ["fluxo", "data", "scheduler"]

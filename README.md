@@ -29,10 +29,10 @@ Write the following code in the fluxo1.py file to create a basic flow with a tas
 #### python_files/flow1.py:
 
 ```
-from fluxo import Flow
-from fluxo import Task
+from fluxo import Flow, Task, Minutes
 
-flow = Flow(name='My Flow 1', interval={'minutes': 1, 'at': ':00'})
+interval = Minutes(1, 30).format()
+flow = Flow(name='My Flow 1', interval=interval)
 
 @Task('My Task 1', flow=flow)
 async def My_func():
@@ -57,4 +57,4 @@ python -m fluxo.init_server
 http://127.0.0.1:8080
 ```
 
-![Logo Fluxo](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/Fluxo.png?alt=media&token=9a5d971f-8180-4c0f-a774-332a13d3f5c4)
+![Logo Fluxo](https://firebasestorage.googleapis.com/v0/b/teste-nascin-cripto.appspot.com/o/fluxo-v0.14.0.png?alt=media&token=c6ac9ac9-d272-4312-be1b-219f409095e1)

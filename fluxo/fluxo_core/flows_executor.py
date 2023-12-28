@@ -5,6 +5,7 @@ import importlib
 import asyncio
 import schedule
 import signal
+from time import sleep
 from typing import List, Optional
 from fluxo.settings import PathFilesPython, Db
 from fluxo.uttils import current_time_formatted
@@ -364,6 +365,7 @@ class FlowsExecutor:
         while condition:
             try:
                 schedule.run_pending()
+                sleep(1)
             except KeyboardInterrupt:
                 for job in jobs_pending:
                     schedule.cancel_job(job)
