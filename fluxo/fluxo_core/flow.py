@@ -11,10 +11,10 @@ class Flow:
 
     Example:
         ```
-        from fluxo import Flow
-        from fluxo import Task
+        from fluxo import Flow, Task, Minutes
 
-        flow = Flow(name='My Flow 1', interval={'minutes': 1, 'at': ':00'})
+        interval = Minutes(1, 30).format()
+        flow = Flow(name='My Flow 1', interval=interval)
 
         @Task('My Task 1', flow=flow)
         async def My_func():
