@@ -4,7 +4,7 @@ import os
 
 class AppSettings:
     '''Configurações da aplicação Fluxo'''
-    VERSION = 'v0.14.0'
+    VERSION = 'v0.14.1'
     PORT = 8080
     ASSETS_DIR = 'fluxo_server/assets'
 
